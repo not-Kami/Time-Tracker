@@ -2,19 +2,7 @@
 
 ## 🚀 Fonctionnalités principales à développer
 
-### Base de données et backend
-- [ ] **Implémenter la base de données Supabase**
-  - [ ] Exécuter le script `database.sql` dans Supabase
-  - [ ] Configurer les Row Level Security (RLS) policies
-  - [ ] Tester les triggers et fonctions
-  - [ ] Migrer les données locales vers Supabase
 
-### Authentification et utilisateurs
-- [ ] **Finaliser l'authentification**
-  - [ ] Gérer la confirmation d'email
-  - [ ] Ajouter la récupération de mot de passe
-  - [ ] Implémenter la persistance de session
-  - [ ] Ajouter la déconnexion automatique
 
 ### Gestion des projets et tâches
 - [ ] **Améliorer la gestion des projets**
