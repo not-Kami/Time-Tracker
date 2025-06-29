@@ -8,7 +8,7 @@ import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { CategoryCard } from './components/CategoryCard';
 import { ProjectCard } from './components/ProjectCard';
-import { SkillDetail } from './components/SkillDetail';
+import { ProjectDetail } from './components/ProjectDetail';
 import { ProfilePage } from './components/ProfilePage';
 import { CreateSkillModal } from './components/CreateSkillModal';
 import { CreateCategoryModal } from './components/CreateCategoryModal';
@@ -327,7 +327,7 @@ function AppContent() {
           />
         }
       >
-        <SkillDetail
+        <ProjectDetail
           skill={selectedSkill}
           category={category}
           timerState={isActiveTimer ? timerState : { status: 'idle', currentSession: null, elapsedTime: 0 }}
