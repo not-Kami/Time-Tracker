@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Project } from '../types';
+import { Skill } from '../types';
 
-export function usePomodoro(project: Project | null) {
+export function usePomodoro(skill: Skill | null) {
   const [pomodoroMode, setPomodoroMode] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(0);
 
-  // Initialize pomodoro time when project changes or mode is enabled
+  // Initialize pomodoro time when skill changes or mode is enabled
   useEffect(() => {
-    if (project && project.pomodoroSettings.enabled && pomodoroMode) {
-      const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
-      const breakTime = project.pomodoroSettings.breakTime * 60 * 1000;
+    if (skill && skill.pomodoro_settings.enabled && pomodoroMode) {
+      const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
+      const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
       setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
     }
-  }, [project, pomodoroMode, isBreak]);
+  }, [skill, pomodoroMode, isBreak]);
 
   useEffect(() => {
-    if (!pomodoroMode || !project?.pomodoroSettings.enabled) return;
+    if (!pomodoroMode || !skill?.pomodoro_settings.enabled) return;
 
     const interval = setInterval(() => {
       setPomodoroTimeLeft(prev => {
@@ -26,8 +26,8 @@ export function usePomodoro(project: Project | null) {
             const newIsBreak = !current;
             return newIsBreak;
           });
-          const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
-          const breakTime = project.pomodoroSettings.breakTime * 60 * 1000;
+          const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
+          const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
           return isBreak ? focusTime : breakTime;
         }
         return prev - 1000;
@@ -35,29 +35,29 @@ export function usePomodoro(project: Project | null) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [pomodoroMode, isBreak, project]);
+  }, [pomodoroMode, isBreak, skill]);
 
   const togglePomodoro = () => {
-    if (!project?.pomodoroSettings.enabled) return;
+    if (!skill?.pomodoro_settings.enabled) return;
     
     setPomodoroMode(!pomodoroMode);
-    if (!pomodoroMode && project) {
-      const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
+    if (!pomodoroMode && skill) {
+      const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
       setPomodoroTimeLeft(focusTime);
       setIsBreak(false);
     }
   };
 
   const resetPomodoro = () => {
-    if (!project?.pomodoroSettings.enabled) return;
+    if (!skill?.pomodoro_settings.enabled) return;
     
-    const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
-    const breakTime = project.pomodoroSettings.breakTime * 60 * 1000;
+    const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
+    const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
     setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
   };
 
   return {
-    pomodoroMode: pomodoroMode && project?.pomodoroSettings.enabled,
+    pomodoroMode: pomodoroMode && skill?.pomodoro_settings.enabled,
     isBreak,
     pomodoroTimeLeft,
     togglePomodoro,
