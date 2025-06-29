@@ -7,7 +7,7 @@ import { AuthPage } from './components/Auth/AuthPage';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { CategoryCard } from './components/CategoryCard';
-import { SkillCard } from './components/SkillCard';
+import { ProjectCard } from './components/ProjectCard';
 import { SkillDetail } from './components/SkillDetail';
 import { ProfilePage } from './components/ProfilePage';
 import { CreateSkillModal } from './components/CreateSkillModal';
@@ -626,7 +626,7 @@ function AppContent() {
                 const isActiveTimer = activeTimerSkillId === skill.id;
 
                 return (
-                  <SkillCard
+                  <ProjectCard
                     key={skill.id}
                     skill={skill}
                     category={category}
