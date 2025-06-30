@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Check, X, Clock, Calendar, Star, Timer, FileText, Edit3, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Check, X, Clock, Calendar, Star, Timer, FileText, Edit3, Save, Settings } from 'lucide-react';
 import { Skill, Category, Task, TimerState, Note, Session } from '../types';
 import { formatHours, formatDetailedTime, getCategoryColor, getAchievementLevel } from '../utils/helpers';
 import { generateId } from '../utils/helpers';
@@ -44,6 +44,11 @@ export function ProjectDetail({
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false);
   const [noteViewMode, setNoteViewMode] = useState<'edit' | 'preview'>('edit');
   const [editingNoteViewMode, setEditingNoteViewMode] = useState<'edit' | 'preview'>('edit');
+  const [isEditingPomodoro, setIsEditingPomodoro] = useState(false);
+  const [pomodoroEnabled, setPomodoroEnabled] = useState(skill.pomodoroSettings.enabled);
+  const [focusTime, setFocusTime] = useState(skill.pomodoroSettings.focusTime);
+  const [breakTime, setBreakTime] = useState(skill.pomodoroSettings.breakTime);
+  const [startWithPomodoro, setStartWithPomodoro] = useState(skill.pomodoroSettings.enabled);
   const { t } = useLanguage();
 
   const colorClasses = getCategoryColor(category.color);
@@ -54,12 +59,45 @@ export function ProjectDetail({
 
   const handleTimerAction = () => {
     if (timerState.status === 'idle') {
+      // If starting timer with pomodoro mode, temporarily enable it for this session
+      if (startWithPomodoro && !skill.pomodoroSettings.enabled) {
+        const tempSkill = {
+          ...skill,
+          pomodoroSettings: {
+            ...skill.pomodoroSettings,
+            enabled: true
+          }
+        };
+        onUpdateSkill(tempSkill);
+      }
       onStartTimer();
     } else if (timerState.status === 'running') {
       onPauseTimer();
     } else if (timerState.status === 'paused') {
       onResumeTimer();
     }
+  };
+
+  const savePomodoroSettings = () => {
+    const updatedSkill = {
+      ...skill,
+      pomodoroSettings: {
+        enabled: pomodoroEnabled,
+        focusTime,
+        breakTime,
+      },
+      updatedAt: new Date(),
+    };
+
+    onUpdateSkill(updatedSkill);
+    setIsEditingPomodoro(false);
+  };
+
+  const cancelPomodoroEdit = () => {
+    setPomodoroEnabled(skill.pomodoroSettings.enabled);
+    setFocusTime(skill.pomodoroSettings.focusTime);
+    setBreakTime(skill.pomodoroSettings.breakTime);
+    setIsEditingPomodoro(false);
   };
 
   const addTask = () => {
@@ -260,6 +298,23 @@ export function ProjectDetail({
                   {t('timer.currentSession')}: {formatDetailedTime(timerState.elapsedTime)}
                 </div>
               </div>
+
+              {/* Pomodoro Mode Switch */}
+              {skill.pomodoroSettings.enabled && (
+                <div className="flex items-center justify-center space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                  <Timer className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Start with Pomodoro Mode
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={startWithPomodoro}
+                    onChange={(e) => setStartWithPomodoro(e.target.checked)}
+                    className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    disabled={timerState.status !== 'idle'}
+                  />
+                </div>
+              )}
 
               <div className="flex items-center justify-center space-x-4">
                 <button
@@ -629,30 +684,113 @@ export function ProjectDetail({
         </div>
 
         <div className="space-y-6">
-          {/* Stats Card */}
-          {skill.pomodoroSettings.enabled && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+          {/* Pomodoro Settings Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
                 <Timer className="w-5 h-5 text-red-500" />
-                <span>{t('pomodoro.title')}</span>
+                <span>{t('pomodoro.title')} Settings</span>
               </h3>
-              
+              <button
+                onClick={() => setIsEditingPomodoro(true)}
+                className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {isEditingPomodoro ? (
               <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="pomodoroEnabled"
+                    checked={pomodoroEnabled}
+                    onChange={(e) => setPomodoroEnabled(e.target.checked)}
+                    className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <label htmlFor="pomodoroEnabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Enable Pomodoro Technique
+                  </label>
+                </div>
+
+                {pomodoroEnabled && (
+                  <div className="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                    <div>
+                      <label htmlFor="focusTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Focus Time (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        id="focusTime"
+                        value={focusTime}
+                        onChange={(e) => setFocusTime(Math.max(1, parseInt(e.target.value) || 25))}
+                        min="1"
+                        max="120"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="breakTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Break Time (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        id="breakTime"
+                        value={breakTime}
+                        onChange={(e) => setBreakTime(Math.max(1, parseInt(e.target.value) || 5))}
+                        min="1"
+                        max="60"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={savePomodoroSettings}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+                  >
+                    <Save className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelPomodoroEdit}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status</span>
+                  <span className={`text-sm font-bold ${skill.pomodoroSettings.enabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    {skill.pomodoroSettings.enabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+                
+                {skill.pomodoroSettings.enabled && (
+                  <>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.focusTime')}</span>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400 text-center">{skill.pomodoroSettings.focusTime}m</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.breakTime')}</span>
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400 text-center">{skill.pomodoroSettings.breakTime}m</span>
+                    </div>
+                  </>
+                )}
+                
                 <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.completedSessions')}</span>
                   <span className="text-lg font-bold text-red-600 dark:text-red-400 text-center">{pomodoroSessions}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.focusTime')}</span>
-                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400 text-center">{skill.pomodoroSettings.focusTime}m</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.breakTime')}</span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400 text-center">{skill.pomodoroSettings.breakTime}m</span>
-                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Recent Sessions */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
