@@ -11,6 +11,7 @@ export function useTimer() {
 
   const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<Date | null>(null);
+  const pausedTimeRef = useRef<number>(0); // Track paused time for pomodoro
 
   useEffect(() => {
     if (timerState.status === 'running') {
@@ -49,6 +50,7 @@ export function useTimer() {
     };
 
     startTimeRef.current = now;
+    pausedTimeRef.current = 0; // Reset paused time
     setTimerState({
       status: 'running',
       currentSession: session,
@@ -57,6 +59,8 @@ export function useTimer() {
   };
 
   const pauseTimer = () => {
+    // Store the current elapsed time when pausing
+    pausedTimeRef.current = timerState.elapsedTime;
     setTimerState(prev => ({
       ...prev,
       status: 'paused',
@@ -89,6 +93,7 @@ export function useTimer() {
     });
 
     startTimeRef.current = null;
+    pausedTimeRef.current = 0;
 
     return finalSession;
   };

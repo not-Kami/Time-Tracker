@@ -58,11 +58,34 @@ function AppContent() {
     }
   };
 
-  const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro } = usePomodoro(
+  const { 
+    pomodoroMode, 
+    isBreak, 
+    pomodoroTimeLeft, 
+    togglePomodoro, 
+    pausePomodoro, 
+    resumePomodoro, 
+    stopPomodoro,
+    breakAdviceShown,
+    setBreakAdviceShown
+  } = usePomodoro(
     activeSkill, 
     handlePomodoroComplete, 
     handleBreakComplete
   );
+
+  // Sync pomodoro pause/resume with timer
+  useEffect(() => {
+    if (pomodoroMode) {
+      if (timerState.status === 'paused') {
+        pausePomodoro();
+      } else if (timerState.status === 'running') {
+        resumePomodoro();
+      } else if (timerState.status === 'idle') {
+        stopPomodoro();
+      }
+    }
+  }, [timerState.status, pomodoroMode, pausePomodoro, resumePomodoro, stopPomodoro]);
 
   // Check for achievement level changes
   useEffect(() => {
@@ -358,6 +381,8 @@ function AppContent() {
             pomodoroTimeLeft={pomodoroTimeLeft}
             isBreak={isBreak}
             onTogglePomodoro={togglePomodoro}
+            breakAdviceShown={breakAdviceShown}
+            setBreakAdviceShown={setBreakAdviceShown}
           />
         )}
       </Layout>
@@ -404,6 +429,8 @@ function AppContent() {
             pomodoroTimeLeft={pomodoroTimeLeft}
             isBreak={isBreak}
             onTogglePomodoro={togglePomodoro}
+            breakAdviceShown={breakAdviceShown}
+            setBreakAdviceShown={setBreakAdviceShown}
           />
         )}
       </Layout>
@@ -585,6 +612,8 @@ function AppContent() {
             pomodoroTimeLeft={pomodoroTimeLeft}
             isBreak={isBreak}
             onTogglePomodoro={togglePomodoro}
+            breakAdviceShown={breakAdviceShown}
+            setBreakAdviceShown={setBreakAdviceShown}
           />
         )}
       </Layout>
@@ -732,6 +761,8 @@ function AppContent() {
           pomodoroTimeLeft={pomodoroTimeLeft}
           isBreak={isBreak}
           onTogglePomodoro={togglePomodoro}
+          breakAdviceShown={breakAdviceShown}
+          setBreakAdviceShown={setBreakAdviceShown}
         />
       )}
     </Layout>

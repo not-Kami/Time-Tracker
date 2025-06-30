@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import { Star, Plus, Settings, Clock, Moon, Sun, LayoutDashboard, Globe } from 'lucide-react';
 import { Category, Skill } from '../types';
@@ -34,6 +34,7 @@ export function Sidebar({
   onOpenSettings
 }: SidebarProps) {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [motivationalMessage, setMotivationalMessage] = useState('');
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
@@ -61,7 +62,8 @@ export function Sidebar({
     return t('app.greeting.evening');
   };
 
-  const getMotivationalMessage = () => {
+  // Set motivational message once on component mount
+  useEffect(() => {
     const messages = [
       t('app.motivation.1'),
       t('app.motivation.2'),
@@ -69,8 +71,9 @@ export function Sidebar({
       t('app.motivation.4'),
       t('app.motivation.5'),
     ];
-    return messages[Math.floor(Math.random() * messages.length)];
-  };
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    setMotivationalMessage(randomMessage);
+  }, []); // Empty dependency array means this runs once on mount
 
   const currentLanguage = languages.find(lang => lang.code === language);
 
@@ -105,7 +108,7 @@ export function Sidebar({
             {getGreeting()}, Developer! 👋
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            {getMotivationalMessage()}
+            {motivationalMessage}
           </p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, Timer, Coffee, Minimize2, Maximize2, X, Eye, EyeOff, Droplets, Dumbbell, Zap } from 'lucide-react';
 import { Skill, Category, TimerState } from '../types';
 import { formatDetailedTime, getCategoryColor } from '../utils/helpers';
@@ -15,6 +15,8 @@ interface TimerToastProps {
   pomodoroTimeLeft: number;
   isBreak: boolean;
   onTogglePomodoro: () => void;
+  breakAdviceShown: boolean;
+  setBreakAdviceShown: (shown: boolean) => void;
 }
 
 const breakAdvice = [
@@ -35,24 +37,37 @@ export function TimerToast({
   pomodoroTimeLeft,
   isBreak,
   onTogglePomodoro,
+  breakAdviceShown,
+  setBreakAdviceShown,
 }: TimerToastProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [currentAdvice, setCurrentAdvice] = useState(breakAdvice[0]);
   const { t } = useLanguage();
+
+  // Set random advice when break starts and hasn't been shown yet
+  useEffect(() => {
+    if (isBreak && pomodoroMode && !breakAdviceShown) {
+      const randomAdvice = breakAdvice[Math.floor(Math.random() * breakAdvice.length)];
+      setCurrentAdvice(randomAdvice);
+      setBreakAdviceShown(true);
+    }
+  }, [isBreak, pomodoroMode, breakAdviceShown, setBreakAdviceShown]);
 
   if (timerState.status === 'idle' || isHidden) return null;
 
   const colorClasses = getCategoryColor(category.color);
-  const displayTime = pomodoroMode ? pomodoroTimeLeft : timerState.elapsedTime;
+  
+  // During pomodoro break, pause the main timer display but show pomodoro countdown
+  const displayTime = pomodoroMode && isBreak ? pomodoroTimeLeft : 
+                     pomodoroMode && !isBreak ? pomodoroTimeLeft : 
+                     timerState.elapsedTime;
   
   // Calculate progress for custom pomodoro settings
   const focusTimeMs = skill.pomodoroSettings.focusTime * 60 * 1000;
   const breakTimeMs = skill.pomodoroSettings.breakTime * 60 * 1000;
   const totalTimeMs = isBreak ? breakTimeMs : focusTimeMs;
   const progressPercent = pomodoroMode ? ((totalTimeMs - pomodoroTimeLeft) / totalTimeMs) * 100 : 0;
-
-  // Get random break advice
-  const currentAdvice = breakAdvice[Math.floor(Math.random() * breakAdvice.length)];
 
   // Hidden state - show only the toggle button
   if (isHidden) {
@@ -90,7 +105,7 @@ export function TimerToast({
                 <div className="font-semibold text-gray-900 dark:text-white text-sm">
                   {skill.name}
                 </div>
-                <div className={`text-xs px-2 py-1 rounded-full ${
+                <div className={`text-xs px-2 py-1 rounded-full text-center ${
                   isBreak && pomodoroMode 
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                     : `${colorClasses.bg} ${colorClasses.text}`
@@ -166,6 +181,11 @@ export function TimerToast({
                   : `${t('timer.focusTime')} (${skill.pomodoroSettings.focusTime}m)`
                 }
               </span>
+            </div>
+          )}
+          {!isMinimized && !pomodoroMode && (
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Total: {formatDetailedTime(skill.totalTime + timerState.elapsedTime)}
             </div>
           )}
         </div>
