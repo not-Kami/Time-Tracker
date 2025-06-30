@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AuthPage } from './components/Auth/AuthPage';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { CategoryCard } from './components/CategoryCard';
@@ -17,7 +15,7 @@ import { TimerToast } from './components/TimerToast';
 import { CategoryNotesModal } from './components/CategoryNotesModal';
 import { GamificationPanel } from './components/GamificationPanel';
 import { UpcomingTasks } from './components/UpcomingTasks';
-import { useSupabaseData } from './hooks/useSupabaseData';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTimer } from './hooks/useTimer';
 import { usePomodoro } from './hooks/usePomodoro';
 import { useSoundNotifications } from './hooks/useSoundNotifications';
@@ -28,21 +26,7 @@ import { getAchievementLevel, formatHours } from './utils/helpers';
 type View = 'dashboard' | 'skill' | 'category' | 'profile';
 
 function AppContent() {
-  const { 
-    skills, 
-    categories, 
-    userProfile, 
-    userSettings, 
-    achievements,
-    loading, 
-    error,
-    createCategory,
-    createSkill,
-    updateSkill,
-    updateUserSettings,
-    refetch
-  } = useSupabaseData();
-  
+  const { data, saveData, exportData, isLoaded } = useLocalStorage();
   const { timerState, startTimer, pauseTimer, resumeTimer, stopTimer } = useTimer();
   const { playSound, isSoundEnabled, toggleSound } = useSoundNotifications();
   const { t } = useLanguage();
@@ -59,13 +43,13 @@ function AppContent() {
   const [showingPinned, setShowingPinned] = useState(false);
   const [previousAchievementLevel, setPreviousAchievementLevel] = useState<string>('');
 
-  const activeSkill = activeTimerSkillId ? skills.find(s => s.id === activeTimerSkillId) : null;
+  const activeSkill = activeTimerSkillId ? data.skills.find(s => s.id === activeTimerSkillId) : null;
   const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro } = usePomodoro(activeSkill);
 
   // Check for achievement level changes
   useEffect(() => {
     if (activeSkill && isSoundEnabled) {
-      const currentLevel = getAchievementLevel(activeSkill.total_time + timerState.elapsedTime).level;
+      const currentLevel = getAchievementLevel(activeSkill.totalTime + timerState.elapsedTime).level;
       if (previousAchievementLevel && currentLevel !== previousAchievementLevel) {
         playSound('achievement-unlocked');
       }
@@ -93,24 +77,24 @@ function AppContent() {
 
   const getFilteredSkills = (): Skill[] => {
     if (showingPinned) {
-      return skills.filter(skill => skill.is_pinned);
+      return data.skills.filter(skill => skill.isPinned);
     }
     if (selectedCategoryId) {
-      return skills.filter(skill => skill.category_id === selectedCategoryId);
+      return data.skills.filter(skill => skill.categoryId === selectedCategoryId);
     }
-    return skills;
+    return data.skills;
   };
 
   const getSkillsByCategory = (categoryId: string): Skill[] => {
-    return skills.filter(skill => skill.category_id === categoryId);
+    return data.skills.filter(skill => skill.categoryId === categoryId);
   };
 
   const findCategoryById = (categoryId: string): Category | undefined => {
-    return categories.find(cat => cat.id === categoryId);
+    return data.categories.find(cat => cat.id === categoryId);
   };
 
   const findSkillById = (skillId: string): Skill | undefined => {
-    return skills.find(skill => skill.id === skillId);
+    return data.skills.find(skill => skill.id === skillId);
   };
 
   const handleCreateSkill = async (
@@ -123,38 +107,63 @@ function AppContent() {
     focusTime?: number,
     breakTime?: number
   ) => {
-    const skillData = {
+    const newSkill: Skill = {
+      id: Math.random().toString(36).substr(2, 9),
       name,
-      category_id: categoryId,
+      categoryId,
       description,
       difficulty: difficulty || 'beginner',
-      status: 'active' as const,
-      target_hours: targetHours ? targetHours * 60 * 60 * 1000 : 0,
-      total_time: 0,
-      is_pinned: false,
-      pomodoro_settings: {
+      status: 'active',
+      targetHours: targetHours ? targetHours * 60 * 60 * 1000 : 0,
+      totalTime: 0,
+      isPinned: false,
+      pomodoroSettings: {
         enabled: pomodoroEnabled || false,
         focusTime: focusTime || 25,
         breakTime: breakTime || 5,
       },
+      tasks: [],
+      sessions: [],
+      notes: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    await createSkill(skillData);
+    const updatedData = {
+      ...data,
+      skills: [newSkill, ...data.skills],
+    };
+
+    saveData(updatedData);
   };
 
   const handleCreateCategory = async (name: string, color: string, icon: string, description?: string) => {
-    const categoryData = {
+    const newCategory: Category = {
+      id: Math.random().toString(36).substr(2, 9),
       name,
       color,
       icon,
       description,
+      createdAt: new Date(),
     };
 
-    await createCategory(categoryData);
+    const updatedData = {
+      ...data,
+      categories: [...data.categories, newCategory],
+    };
+
+    saveData(updatedData);
   };
 
   const handleUpdateSkill = async (updatedSkill: Skill) => {
-    await updateSkill(updatedSkill.id, updatedSkill);
+    const updatedData = {
+      ...data,
+      skills: data.skills.map(skill => 
+        skill.id === updatedSkill.id ? updatedSkill : skill
+      ),
+    };
+
+    saveData(updatedData);
     setSelectedSkill(updatedSkill);
   };
 
@@ -162,9 +171,13 @@ function AppContent() {
     const skill = findSkillById(skillId);
     if (!skill) return;
 
-    await updateSkill(skillId, {
-      is_pinned: !skill.is_pinned,
-    });
+    const updatedSkill = {
+      ...skill,
+      isPinned: !skill.isPinned,
+      updatedAt: new Date(),
+    };
+
+    handleUpdateSkill(updatedSkill);
   };
 
   const handleStartTimer = (skillId: string) => {
@@ -175,24 +188,28 @@ function AppContent() {
   const handleStopTimer = async (skillId: string) => {
     const session = stopTimer();
     if (session) {
-      const skill = skills.find(s => s.id === skillId);
+      const skill = data.skills.find(s => s.id === skillId);
       if (skill) {
         const enhancedSession: Session = {
           ...session,
-          pomodoro_session: pomodoroMode,
-          is_break: isBreak,
+          pomodoroSession: pomodoroMode,
+          isBreak: isBreak,
         };
 
         // Update skill with new session and total time
-        await updateSkill(skillId, {
-          total_time: skill.total_time + session.duration,
+        const updatedSkill = {
+          ...skill,
+          totalTime: skill.totalTime + session.duration,
           sessions: [...skill.sessions, enhancedSession],
-        });
+          updatedAt: new Date(),
+        };
+
+        handleUpdateSkill(updatedSkill);
 
         // Check for goal achievements
         if (isSoundEnabled) {
-          const newLevel = getAchievementLevel(skill.total_time + session.duration);
-          const oldLevel = getAchievementLevel(skill.total_time);
+          const newLevel = getAchievementLevel(skill.totalTime + session.duration);
+          const oldLevel = getAchievementLevel(skill.totalTime);
           if (newLevel.level !== oldLevel.level) {
             playSound('goal-reached');
           }
@@ -251,7 +268,7 @@ function AppContent() {
 
   const handleUpdateCategoryNotes = (notes: Note[]) => {
     if (!selectedCategoryForNotes) return;
-    // TODO: Implement category notes update in Supabase
+    // TODO: Implement category notes update
   };
 
   const handleTaskClick = (skill: Skill) => {
@@ -259,29 +276,7 @@ function AppContent() {
     setCurrentView('skill');
   };
 
-  const exportData = () => {
-    const data = {
-      skills,
-      categories,
-      userProfile,
-      userSettings,
-      achievements,
-      exportedAt: new Date().toISOString(),
-    };
-    
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `timexp-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  if (loading) {
+  if (!isLoaded) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-64">
@@ -291,20 +286,10 @@ function AppContent() {
     );
   }
 
-  if (error) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-64">
-          <div className="text-red-500 dark:text-red-400">Error: {error}</div>
-        </div>
-      </Layout>
-    );
-  }
-
-  const activeCategory = activeSkill ? findCategoryById(activeSkill.category_id) : null;
+  const activeCategory = activeSkill ? findCategoryById(activeSkill.categoryId) : null;
 
   if (currentView === 'skill' && selectedSkill) {
-    const category = findCategoryById(selectedSkill.category_id);
+    const category = findCategoryById(selectedSkill.categoryId);
     if (!category) return null;
 
     const isActiveTimer = activeTimerSkillId === selectedSkill.id;
@@ -313,8 +298,8 @@ function AppContent() {
       <Layout
         sidebar={
           <Sidebar
-            categories={categories}
-            skills={skills}
+            categories={data.categories}
+            skills={data.skills}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
@@ -366,8 +351,8 @@ function AppContent() {
       <Layout
         sidebar={
           <Sidebar
-            categories={categories}
-            skills={skills}
+            categories={data.categories}
+            skills={data.skills}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
@@ -381,8 +366,8 @@ function AppContent() {
         }
       >
         <ProfilePage
-          skills={skills}
-          userProfile={userProfile}
+          skills={data.skills}
+          userProfile={null}
           onBack={handleShowDashboard}
           onExport={exportData}
           isSoundEnabled={isSoundEnabled}
@@ -409,9 +394,9 @@ function AppContent() {
 
   // Dashboard View
   if (currentView === 'dashboard') {
-    const totalTime = skills.reduce((sum, skill) => sum + skill.total_time, 0);
-    const totalTasks = skills.reduce((sum, skill) => sum + skill.tasks.length, 0);
-    const completedTasks = skills.reduce((sum, skill) => 
+    const totalTime = data.skills.reduce((sum, skill) => sum + skill.totalTime, 0);
+    const totalTasks = data.skills.reduce((sum, skill) => sum + skill.tasks.length, 0);
+    const completedTasks = data.skills.reduce((sum, skill) => 
       sum + skill.tasks.filter(task => task.completed).length, 0
     );
 
@@ -419,8 +404,8 @@ function AppContent() {
       <Layout
         sidebar={
           <Sidebar
-            categories={categories}
-            skills={skills}
+            categories={data.categories}
+            skills={data.skills}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
@@ -447,7 +432,7 @@ function AppContent() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                  {skills.length}
+                  {data.skills.length}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.activeSkills')}</div>
               </div>
@@ -464,8 +449,8 @@ function AppContent() {
 
           {/* Upcoming Tasks */}
           <UpcomingTasks 
-            skills={skills} 
-            categories={categories}
+            skills={data.skills} 
+            categories={data.categories}
             onTaskClick={handleTaskClick}
           />
 
@@ -482,9 +467,9 @@ function AppContent() {
               </button>
             </div>
 
-            {categories.length > 0 ? (
+            {data.categories.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categories.map((category) => {
+                {data.categories.map((category) => {
                   const categorySkills = getSkillsByCategory(category.id);
                   return (
                     <CategoryCard
@@ -514,11 +499,11 @@ function AppContent() {
           </div>
 
           {/* Achievement Panel at Bottom */}
-          <GamificationPanel skills={skills} />
+          <GamificationPanel skills={data.skills} />
         </div>
 
         <CreateSkillModal
-          categories={categories}
+          categories={data.categories}
           selectedCategoryId={selectedCategoryId || undefined}
           isOpen={isCreateSkillModalOpen}
           onClose={() => {
@@ -540,10 +525,10 @@ function AppContent() {
           onExport={exportData}
           isSoundEnabled={isSoundEnabled}
           onToggleSound={toggleSound}
-          skills={skills}
-          userProfile={userProfile}
-          userSettings={userSettings}
-          onUpdateSettings={updateUserSettings}
+          skills={data.skills}
+          userProfile={null}
+          userSettings={null}
+          onUpdateSettings={() => {}}
         />
 
         {selectedCategoryForNotes && (
@@ -589,8 +574,8 @@ function AppContent() {
     <Layout
       sidebar={
         <Sidebar
-          categories={categories}
-          skills={skills}
+          categories={data.categories}
+          skills={data.skills}
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={handleSelectCategory}
           onShowPinned={handleShowPinned}
@@ -620,7 +605,7 @@ function AppContent() {
           {filteredSkills.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredSkills.map((skill) => {
-                const category = findCategoryById(skill.category_id);
+                const category = findCategoryById(skill.categoryId);
                 if (!category) return null;
 
                 const isActiveTimer = activeTimerSkillId === skill.id;
@@ -665,7 +650,7 @@ function AppContent() {
       </div>
 
       <CreateSkillModal
-        categories={categories}
+        categories={data.categories}
         selectedCategoryId={selectedCategoryId || undefined}
         isOpen={isCreateSkillModalOpen}
         onClose={() => {
@@ -687,10 +672,10 @@ function AppContent() {
         onExport={exportData}
         isSoundEnabled={isSoundEnabled}
         onToggleSound={toggleSound}
-        skills={skills}
-        userProfile={userProfile}
-        userSettings={userSettings}
-        onUpdateSettings={updateUserSettings}
+        skills={data.skills}
+        userProfile={null}
+        userSettings={null}
+        onUpdateSettings={() => {}}
       />
 
       {selectedCategoryForNotes && (
@@ -724,31 +709,11 @@ function AppContent() {
   );
 }
 
-function AuthenticatedApp() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthPage />;
-  }
-
-  return <AppContent />;
-}
-
 function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <AuthenticatedApp />
-        </AuthProvider>
+        <AppContent />
       </LanguageProvider>
     </ThemeProvider>
   );

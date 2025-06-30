@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
-import { Star, Plus, User, LogOut, Settings, Clock, Moon, Sun, LayoutDashboard, Globe } from 'lucide-react';
-import { Category, Project } from '../types';
+import { Star, Plus, Settings, Clock, Moon, Sun, LayoutDashboard, Globe } from 'lucide-react';
+import { Category, Skill } from '../types';
 import { getCategoryColor } from '../utils/helpers';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   categories: Category[];
-  projects: Project[];
+  skills: Skill[];
   selectedCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
   onShowPinned: () => void;
@@ -23,7 +22,7 @@ interface SidebarProps {
 
 export function Sidebar({ 
   categories, 
-  projects, 
+  skills, 
   selectedCategoryId, 
   onSelectCategory, 
   onShowPinned,
@@ -37,7 +36,6 @@ export function Sidebar({
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { user, signOut } = useAuth();
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -50,11 +48,11 @@ export function Sidebar({
     { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
   ];
 
-  const getProjectCount = (categoryId: string) => {
-    return projects.filter(p => p.categoryId === categoryId).length;
+  const getSkillCount = (categoryId: string) => {
+    return skills.filter(s => s.categoryId === categoryId).length;
   };
 
-  const pinnedCount = projects.filter(p => p.isPinned).length;
+  const pinnedCount = skills.filter(s => s.isPinned).length;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -101,18 +99,16 @@ export function Sidebar({
       </div>
 
       {/* User Greeting */}
-      {user && (
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-gray-200 dark:border-gray-700">
-          <div className="text-center">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              {getGreeting()}, {user.email?.split('@')[0]}! 👋
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              {getMotivationalMessage()}
-            </p>
-          </div>
+      <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-gray-200 dark:border-gray-700">
+        <div className="text-center">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+            {getGreeting()}, Developer! 👋
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            {getMotivationalMessage()}
+          </p>
         </div>
-      )}
+      </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {/* Dashboard */}
@@ -128,7 +124,7 @@ export function Sidebar({
           <span className="font-medium">{t('nav.dashboard')}</span>
         </button>
 
-        {/* Pinned Projects */}
+        {/* Pinned Skills */}
         <button
           onClick={onShowPinned}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${
@@ -162,7 +158,7 @@ export function Sidebar({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const IconComponent = (Icons as any)[category.icon] || Icons.Folder;
             const colorClasses = getCategoryColor(category.color);
-            const projectCount = getProjectCount(category.id);
+            const skillCount = getSkillCount(category.id);
 
             return (
               <button
@@ -177,7 +173,7 @@ export function Sidebar({
                 <IconComponent className="w-5 h-5" />
                 <span className="font-medium flex-1">{category.name}</span>
                 <span className="text-sm bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded-full text-center">
-                  {projectCount}
+                  {skillCount}
                 </span>
               </button>
             );
@@ -227,45 +223,14 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* User Section */}
-        {user && (
-          <>
-            <button
-              onClick={onShowProfile}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors cursor-pointer ${
-                currentView === 'profile'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
-              }`}
-            >
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user.email?.split('@')[0]}
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400">{t('common.online')}</p>
-              </div>
-            </button>
-            <div className="flex space-x-2">
-              <button 
-                onClick={onOpenSettings}
-                className="flex-1 flex items-center justify-center space-x-2 px-2 py-2 text-xs text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="truncate">{t('nav.settings')}</span>
-              </button>
-              <button
-                onClick={() => signOut()}
-                className="flex-1 flex items-center justify-center space-x-2 px-2 py-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="truncate">{t('nav.logout')}</span>
-              </button>
-            </div>
-          </>
-        )}
+        {/* Settings Button */}
+        <button 
+          onClick={onOpenSettings}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        >
+          <Settings className="w-4 h-4" />
+          <span>{t('nav.settings')}</span>
+        </button>
       </div>
     </div>
   );
