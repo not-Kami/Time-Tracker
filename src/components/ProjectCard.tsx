@@ -34,6 +34,11 @@ export function ProjectCard({
   const currentTime = skill.totalTime + timerState.elapsedTime;
   const completedTasks = skill.tasks.filter(task => task.completed).length;
   const achievement = getAchievementLevel(currentTime);
+  
+  // Calculate pomodoro sessions for this skill
+  const pomodoroSessions = skill.sessions.filter(session => 
+    session.pomodoroSession && !session.isBreak
+  ).length;
 
   const handleTimerAction = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -154,14 +159,21 @@ export function ProjectCard({
           </div>
         )}
 
+        {skill.pomodoroSettings.enabled && pomodoroSessions > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Pomodoros</span>
+            <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg text-center">
+              {pomodoroSessions}
+            </span>
+          </div>
+        )}
+
         {achievement.nextMilestone === 0 && (
           <div className="text-center py-3">
             <span className="text-sm font-bold text-purple-600 dark:text-purple-400">🎉 {t('achievements.maxLevel')}</span>
           </div>
         )}
       </div>
-
-      {/* Progress bar at bottom - only show when clicked for details */}
     </div>
   );
 }

@@ -44,7 +44,25 @@ function AppContent() {
   const [previousAchievementLevel, setPreviousAchievementLevel] = useState<string>('');
 
   const activeSkill = activeTimerSkillId ? data.skills.find(s => s.id === activeTimerSkillId) : null;
-  const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro } = usePomodoro(activeSkill);
+  
+  // Pomodoro sound callbacks
+  const handlePomodoroComplete = () => {
+    if (isSoundEnabled) {
+      playSound('pomodoro-complete');
+    }
+  };
+
+  const handleBreakComplete = () => {
+    if (isSoundEnabled) {
+      playSound('break-complete');
+    }
+  };
+
+  const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro } = usePomodoro(
+    activeSkill, 
+    handlePomodoroComplete, 
+    handleBreakComplete
+  );
 
   // Check for achievement level changes
   useEffect(() => {
@@ -63,17 +81,6 @@ function AppContent() {
       setActiveTimerSkillId(null);
     }
   }, [timerState.status, activeTimerSkillId]);
-
-  // Pomodoro completion notifications
-  useEffect(() => {
-    if (pomodoroMode && pomodoroTimeLeft <= 0 && isSoundEnabled) {
-      if (isBreak) {
-        playSound('break-complete');
-      } else {
-        playSound('pomodoro-complete');
-      }
-    }
-  }, [pomodoroMode, pomodoroTimeLeft, isBreak, playSound, isSoundEnabled]);
 
   const getFilteredSkills = (): Skill[] => {
     if (showingPinned) {
@@ -127,6 +134,7 @@ function AppContent() {
       notes: [],
       createdAt: new Date(),
       updatedAt: new Date(),
+      isActive: true,
     };
 
     const updatedData = {
@@ -145,6 +153,8 @@ function AppContent() {
       icon,
       description,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: true,
     };
 
     const updatedData = {
@@ -399,6 +409,9 @@ function AppContent() {
     const completedTasks = data.skills.reduce((sum, skill) => 
       sum + skill.tasks.filter(task => task.completed).length, 0
     );
+    const totalPomodoroSessions = data.skills.reduce((sum, skill) => 
+      sum + skill.sessions.filter(session => session.pomodoroSession && !session.isBreak).length, 0
+    );
 
     return (
       <Layout
@@ -420,7 +433,7 @@ function AppContent() {
       >
         <div className="space-y-8">
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
@@ -443,6 +456,14 @@ function AppContent() {
                   {completedTasks}/{totalTasks}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.tasksCompleted')}</div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
+                  {totalPomodoroSessions}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Pomodoro Sessions</div>
               </div>
             </div>
           </div>
@@ -642,7 +663,7 @@ function AppContent() {
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-blue-500/25"
               >
                 <Plus className="w-6 h-6 mr-2" />
-                {t('skills.createFirst')}
+                <span>{t('skills.createFirst')}</span>
               </button>
             </div>
           )}

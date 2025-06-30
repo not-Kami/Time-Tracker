@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Skill } from '../types';
 
-export function usePomodoro(skill: Skill | null) {
+export function usePomodoro(skill: Skill | null, onPomodoroComplete?: () => void, onBreakComplete?: () => void) {
   const [pomodoroMode, setPomodoroMode] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(0);
@@ -22,10 +22,23 @@ export function usePomodoro(skill: Skill | null) {
       setPomodoroTimeLeft(prev => {
         if (prev <= 1000) {
           // Time's up! Switch between focus and break
+          const wasBreak = isBreak;
+          
           setIsBreak(current => {
             const newIsBreak = !current;
+            
+            // Trigger sound callbacks when switching
+            if (wasBreak && !newIsBreak) {
+              // Break ended, focus starts
+              onBreakComplete?.();
+            } else if (!wasBreak && newIsBreak) {
+              // Pomodoro ended, break starts
+              onPomodoroComplete?.();
+            }
+            
             return newIsBreak;
           });
+          
           const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
           const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
           return isBreak ? focusTime : breakTime;
@@ -35,7 +48,7 @@ export function usePomodoro(skill: Skill | null) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [pomodoroMode, isBreak, skill]);
+  }, [pomodoroMode, isBreak, skill, onPomodoroComplete, onBreakComplete]);
 
   const togglePomodoro = () => {
     if (!skill?.pomodoroSettings.enabled) return;
