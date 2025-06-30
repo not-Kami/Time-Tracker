@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Plus, Check, X, Clock, Calendar, Star, Timer, FileText, Edit3, Save } from 'lucide-react';
-import { Project, Category, Task, TimerState, Note, Session } from '../types';
+import { Skill, Category, Task, TimerState, Note, Session } from '../types';
 import { formatHours, formatDetailedTime, getCategoryColor, getAchievementLevel } from '../utils/helpers';
 import { generateId } from '../utils/helpers';
 import { AddSessionModal } from './AddSessionModal';
@@ -9,11 +9,11 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ProjectDetailProps {
-  project: Project;
+  skill: Skill;
   category: Category;
   timerState: TimerState;
   onBack: () => void;
-  onUpdateProject: (project: Project) => void;
+  onUpdateSkill: (skill: Skill) => void;
   onStartTimer: () => void;
   onPauseTimer: () => void;
   onResumeTimer: () => void;
@@ -22,11 +22,11 @@ interface ProjectDetailProps {
 }
 
 export function ProjectDetail({
-  project,
+  skill,
   category,
   timerState,
   onBack,
-  onUpdateProject,
+  onUpdateSkill,
   onStartTimer,
   onPauseTimer,
   onResumeTimer,
@@ -47,10 +47,10 @@ export function ProjectDetail({
   const { t } = useLanguage();
 
   const colorClasses = getCategoryColor(category.color);
-  const currentTime = project.totalTime + timerState.elapsedTime;
-  const completedTasks = project.tasks.filter(task => task.completed).length;
+  const currentTime = skill.totalTime + timerState.elapsedTime;
+  const completedTasks = skill.tasks.filter(task => task.completed).length;
   const achievement = getAchievementLevel(currentTime);
-  const pomodoroSessions = project.sessions.filter(s => s.pomodoroSession && !s.isBreak).length;
+  const pomodoroSessions = skill.sessions.filter(s => s.pomodoroSession && !s.isBreak).length;
 
   const handleTimerAction = () => {
     if (timerState.status === 'idle') {
@@ -70,17 +70,18 @@ export function ProjectDetail({
       name: newTaskName.trim(),
       completed: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
       deadline: newTaskDeadline ? new Date(newTaskDeadline) : undefined,
       priority: newTaskPriority,
     };
 
-    const updatedProject = {
-      ...project,
-      tasks: [...project.tasks, newTask],
+    const updatedSkill = {
+      ...skill,
+      tasks: [...skill.tasks, newTask],
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
     setNewTaskName('');
     setNewTaskDeadline('');
     setNewTaskPriority('medium');
@@ -88,17 +89,17 @@ export function ProjectDetail({
   };
 
   const toggleTask = (taskId: string) => {
-    const updatedTasks = project.tasks.map(task =>
+    const updatedTasks = skill.tasks.map(task =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     );
 
-    const updatedProject = {
-      ...project,
+    const updatedSkill = {
+      ...skill,
       tasks: updatedTasks,
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
     
     // Trigger sound notification
     if (onTaskToggle) {
@@ -107,14 +108,14 @@ export function ProjectDetail({
   };
 
   const deleteTask = (taskId: string) => {
-    const updatedTasks = project.tasks.filter(task => task.id !== taskId);
-    const updatedProject = {
-      ...project,
+    const updatedTasks = skill.tasks.filter(task => task.id !== taskId);
+    const updatedSkill = {
+      ...skill,
       tasks: updatedTasks,
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
   };
 
   const addNote = () => {
@@ -127,13 +128,13 @@ export function ProjectDetail({
       updatedAt: new Date(),
     };
 
-    const updatedProject = {
-      ...project,
-      notes: [...(project.notes || []), newNote],
+    const updatedSkill = {
+      ...skill,
+      notes: [...(skill.notes || []), newNote],
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
     setNewNoteContent('');
     setIsAddingNote(false);
   };
@@ -147,32 +148,32 @@ export function ProjectDetail({
   const saveNote = (noteId: string) => {
     if (!editingNoteContent.trim()) return;
 
-    const updatedNotes = (project.notes || []).map(note =>
+    const updatedNotes = (skill.notes || []).map(note =>
       note.id === noteId 
         ? { ...note, content: editingNoteContent.trim(), updatedAt: new Date() }
         : note
     );
 
-    const updatedProject = {
-      ...project,
+    const updatedSkill = {
+      ...skill,
       notes: updatedNotes,
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
     setEditingNoteId(null);
     setEditingNoteContent('');
   };
 
   const deleteNote = (noteId: string) => {
-    const updatedNotes = (project.notes || []).filter(note => note.id !== noteId);
-    const updatedProject = {
-      ...project,
+    const updatedNotes = (skill.notes || []).filter(note => note.id !== noteId);
+    const updatedSkill = {
+      ...skill,
       notes: updatedNotes,
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
   };
 
   const handleAddManualSession = (duration: number, date: Date, description?: string) => {
@@ -182,17 +183,18 @@ export function ProjectDetail({
       endTime: new Date(date.getTime() + duration),
       duration,
       createdAt: new Date(),
+      updatedAt: new Date(),
       description,
     };
 
-    const updatedProject = {
-      ...project,
-      totalTime: project.totalTime + duration,
-      sessions: [...project.sessions, newSession],
+    const updatedSkill = {
+      ...skill,
+      totalTime: skill.totalTime + duration,
+      sessions: [...skill.sessions, newSession],
       updatedAt: new Date(),
     };
 
-    onUpdateProject(updatedProject);
+    onUpdateSkill(updatedSkill);
   };
 
   const formatDeadline = (deadline: Date) => {
@@ -238,9 +240,9 @@ export function ProjectDetail({
               </span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
-          {project.description && (
-            <p className="text-gray-600 dark:text-gray-400 mt-2">{project.description}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{skill.name}</h1>
+          {skill.description && (
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{skill.description}</p>
           )}
         </div>
       </div>
@@ -301,7 +303,7 @@ export function ProjectDetail({
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t('tasks.title')} ({completedTasks}/{project.tasks.length})
+                {t('tasks.title')} ({completedTasks}/{skill.tasks.length})
               </h2>
               <button
                 onClick={() => setIsAddingTask(true)}
@@ -313,7 +315,7 @@ export function ProjectDetail({
             </div>
 
             <div className="space-y-3">
-              {project.tasks
+              {skill.tasks
                 .sort((a, b) => {
                   // Sort by completion status: incomplete tasks first, then completed tasks
                   if (a.completed !== b.completed) {
@@ -440,7 +442,7 @@ export function ProjectDetail({
                 </div>
               )}
 
-              {project.tasks.length === 0 && !isAddingTask && (
+              {skill.tasks.length === 0 && !isAddingTask && (
                 <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                   {t('tasks.noTasks')}
                 </p>
@@ -465,7 +467,7 @@ export function ProjectDetail({
             </div>
 
             <div className="space-y-4">
-              {(project.notes || []).map((note) => (
+              {(skill.notes || []).map((note) => (
                 <div
                   key={note.id}
                   className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600"
@@ -617,7 +619,7 @@ export function ProjectDetail({
                 </div>
               )}
 
-              {(project.notes || []).length === 0 && !isAddingNote && (
+              {(skill.notes || []).length === 0 && !isAddingNote && (
                 <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                   {t('notes.noNotes')}
                 </p>
@@ -628,7 +630,7 @@ export function ProjectDetail({
 
         <div className="space-y-6">
           {/* Stats Card */}
-          {project.pomodoroSettings.enabled && (
+          {skill.pomodoroSettings.enabled && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
                 <Timer className="w-5 h-5 text-red-500" />
@@ -642,11 +644,11 @@ export function ProjectDetail({
                 </div>
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.focusTime')}</span>
-                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400 text-center">{project.pomodoroSettings.focusTime}m</span>
+                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400 text-center">{skill.pomodoroSettings.focusTime}m</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pomodoro.breakTime')}</span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400 text-center">{project.pomodoroSettings.breakTime}m</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400 text-center">{skill.pomodoroSettings.breakTime}m</span>
                 </div>
               </div>
             </div>
@@ -657,7 +659,7 @@ export function ProjectDetail({
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t('sessions.title')}</h3>
             
             <div className="space-y-3">
-              {project.sessions.slice(-5).reverse().map((session) => (
+              {skill.sessions.slice(-5).reverse().map((session) => (
                 <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                   <div className="flex items-center space-x-3">
                     <Calendar className="w-5 h-5 text-gray-400" />
@@ -686,7 +688,7 @@ export function ProjectDetail({
                 </div>
               ))}
 
-              {project.sessions.length === 0 && (
+              {skill.sessions.length === 0 && (
                 <p className="text-gray-500 dark:text-gray-400 text-center py-6">
                   {t('sessions.noSessions')}
                 </p>

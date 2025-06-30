@@ -8,15 +8,15 @@ export function usePomodoro(skill: Skill | null) {
 
   // Initialize pomodoro time when skill changes or mode is enabled
   useEffect(() => {
-    if (skill && skill.pomodoro_settings.enabled && pomodoroMode) {
-      const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
-      const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
+    if (skill && skill.pomodoroSettings.enabled && pomodoroMode) {
+      const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
+      const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
       setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
     }
   }, [skill, pomodoroMode, isBreak]);
 
   useEffect(() => {
-    if (!pomodoroMode || !skill?.pomodoro_settings.enabled) return;
+    if (!pomodoroMode || !skill?.pomodoroSettings.enabled) return;
 
     const interval = setInterval(() => {
       setPomodoroTimeLeft(prev => {
@@ -26,8 +26,8 @@ export function usePomodoro(skill: Skill | null) {
             const newIsBreak = !current;
             return newIsBreak;
           });
-          const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
-          const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
+          const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
+          const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
           return isBreak ? focusTime : breakTime;
         }
         return prev - 1000;
@@ -38,26 +38,26 @@ export function usePomodoro(skill: Skill | null) {
   }, [pomodoroMode, isBreak, skill]);
 
   const togglePomodoro = () => {
-    if (!skill?.pomodoro_settings.enabled) return;
+    if (!skill?.pomodoroSettings.enabled) return;
     
     setPomodoroMode(!pomodoroMode);
     if (!pomodoroMode && skill) {
-      const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
+      const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
       setPomodoroTimeLeft(focusTime);
       setIsBreak(false);
     }
   };
 
   const resetPomodoro = () => {
-    if (!skill?.pomodoro_settings.enabled) return;
+    if (!skill?.pomodoroSettings.enabled) return;
     
-    const focusTime = skill.pomodoro_settings.focusTime * 60 * 1000;
-    const breakTime = skill.pomodoro_settings.breakTime * 60 * 1000;
+    const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
+    const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
     setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
   };
 
   return {
-    pomodoroMode: pomodoroMode && skill?.pomodoro_settings.enabled,
+    pomodoroMode: pomodoroMode && skill?.pomodoroSettings.enabled,
     isBreak,
     pomodoroTimeLeft,
     togglePomodoro,

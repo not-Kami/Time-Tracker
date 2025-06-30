@@ -1,11 +1,11 @@
 import React from 'react';
 import { Trophy, Target, Zap, Star, Award, TrendingUp } from 'lucide-react';
-import { Project } from '../types';
+import { Skill } from '../types';
 import { formatHours } from '../utils/helpers';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface GamificationPanelProps {
-  projects: Project[];
+  skills: Skill[];
   className?: string;
 }
 
@@ -19,18 +19,18 @@ interface Achievement {
   target?: number;
 }
 
-export function GamificationPanel({ projects, className = '' }: GamificationPanelProps) {
+export function GamificationPanel({ skills = [], className = '' }: GamificationPanelProps) {
   const { t } = useLanguage();
   
-  const totalTime = projects.reduce((sum, project) => sum + project.totalTime, 0);
-  const completedTasks = projects.reduce((sum, project) => 
-    sum + project.tasks.filter(task => task.completed).length, 0
+  const totalTime = skills.reduce((sum, skill) => sum + skill.totalTime, 0);
+  const completedTasks = skills.reduce((sum, skill) => 
+    sum + skill.tasks.filter(task => task.completed).length, 0
   );
-  const totalSessions = projects.reduce((sum, project) => sum + project.sessions.length, 0);
-  const pomodoroSessions = projects.reduce((sum, project) => 
-    sum + project.sessions.filter(session => 
-      project.pomodoroSettings.enabled && 
-      session.duration >= (project.pomodoroSettings.focusTime * 60 * 1000 * 0.8)
+  const totalSessions = skills.reduce((sum, skill) => sum + skill.sessions.length, 0);
+  const pomodoroSessions = skills.reduce((sum, skill) => 
+    sum + skill.sessions.filter(session => 
+      skill.pomodoroSettings.enabled && 
+      session.duration >= (skill.pomodoroSettings.focusTime * 60 * 1000 * 0.8)
     ).length, 0
   );
 

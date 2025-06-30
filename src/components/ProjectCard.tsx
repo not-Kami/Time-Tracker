@@ -1,24 +1,24 @@
 import React from 'react';
 import { Play, Pause, Square, Star, StarOff, Timer } from 'lucide-react';
-import { Project, Category, TimerState } from '../types';
+import { Skill, Category, TimerState } from '../types';
 import { formatHours, formatDetailedTime, getCategoryColor, getAchievementLevel } from '../utils/helpers';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ProjectCardProps {
-  project: Project;
+  skill: Skill;
   category: Category;
   timerState: TimerState;
   onStartTimer: () => void;
   onPauseTimer: () => void;
   onResumeTimer: () => void;
   onStopTimer: () => void;
-  onTogglePin: (projectId: string) => void;
+  onTogglePin: (skillId: string) => void;
   onClick: () => void;
   showCategory?: boolean;
 }
 
 export function ProjectCard({
-  project,
+  skill,
   category,
   timerState,
   onStartTimer,
@@ -31,8 +31,8 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { t } = useLanguage();
   const colorClasses = getCategoryColor(category.color);
-  const currentTime = project.totalTime + timerState.elapsedTime;
-  const completedTasks = project.tasks.filter(task => task.completed).length;
+  const currentTime = skill.totalTime + timerState.elapsedTime;
+  const completedTasks = skill.tasks.filter(task => task.completed).length;
   const achievement = getAchievementLevel(currentTime);
 
   const handleTimerAction = (e: React.MouseEvent) => {
@@ -54,7 +54,7 @@ export function ProjectCard({
 
   const handleTogglePin = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onTogglePin(project.id);
+    onTogglePin(skill.id);
   };
 
   return (
@@ -67,12 +67,12 @@ export function ProjectCard({
         <button
           onClick={handleTogglePin}
           className={`p-1.5 rounded-lg transition-all duration-200 transform hover:scale-110 ${
-            project.isPinned
+            skill.isPinned
               ? 'text-yellow-500 hover:text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30'
               : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
           }`}
         >
-          {project.isPinned ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
+          {skill.isPinned ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
         </button>
       </div>
 
@@ -119,37 +119,37 @@ export function ProjectCard({
               {achievement.level}
             </span>
           </div>
-          {project.pomodoroSettings.enabled && (
+          {skill.pomodoroSettings.enabled && (
             <div className="flex items-center space-x-1 text-red-600 dark:text-red-400">
               <Timer className="w-4 h-4" />
               <span className="text-xs font-bold text-center">
-                {project.pomodoroSettings.focusTime}m/{project.pomodoroSettings.breakTime}m
+                {skill.pomodoroSettings.focusTime}m/{skill.pomodoroSettings.breakTime}m
               </span>
             </div>
           )}
         </div>
         
         <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {project.name}
+          {skill.name}
         </h3>
-        {project.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{project.description}</p>
+        {skill.description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{skill.description}</p>
         )}
       </div>
 
       <div className="flex-1 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('projects.totalTime')}</span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('skills.totalTime')}</span>
           <span className="font-mono text-xl font-bold text-gray-900 dark:text-white text-center">
             {timerState.status !== 'idle' ? formatDetailedTime(currentTime) : formatHours(currentTime)}
           </span>
         </div>
 
-        {project.tasks.length > 0 && (
+        {skill.tasks.length > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('projects.tasks')}</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('skills.tasks')}</span>
             <span className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg text-center">
-              {completedTasks}/{project.tasks.length}
+              {completedTasks}/{skill.tasks.length}
             </span>
           </div>
         )}

@@ -1,21 +1,21 @@
 import React from 'react';
 import { Calendar, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Project, Task } from '../types';
+import { Skill, Task, Category } from '../types';
 import { getCategoryColor } from '../utils/helpers';
 
 interface UpcomingTasksProps {
-  projects: Project[];
-  categories: any[];
-  onTaskClick?: (project: Project, task: Task) => void;
+  skills: Skill[];
+  categories: Category[];
+  onTaskClick?: (skill: Skill, task: Task) => void;
 }
 
-export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTasksProps) {
+export function UpcomingTasks({ skills = [], categories = [], onTaskClick }: UpcomingTasksProps) {
   // Get all incomplete tasks with deadlines
-  const upcomingTasks = projects
-    .flatMap(project => 
-      project.tasks
+  const upcomingTasks = skills
+    .flatMap(skill => 
+      skill.tasks
         .filter(task => !task.completed && task.deadline)
-        .map(task => ({ project, task }))
+        .map(task => ({ skill, task }))
     )
     .sort((a, b) => {
       if (!a.task.deadline || !b.task.deadline) return 0;
@@ -78,15 +78,15 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
       </div>
 
       <div className="space-y-3">
-        {upcomingTasks.map(({ project, task }) => {
-          const category = categories.find(c => c.id === project.categoryId);
+        {upcomingTasks.map(({ skill, task }) => {
+          const category = categories.find(c => c.id === skill.categoryId);
           const colorClasses = category ? getCategoryColor(category.color) : getCategoryColor('blue');
           const urgency = task.deadline ? getTaskUrgency(new Date(task.deadline)) : null;
 
           return (
             <div
-              key={`${project.id}-${task.id}`}
-              onClick={() => onTaskClick?.(project, task)}
+              key={`${skill.id}-${task.id}`}
+              onClick={() => onTaskClick?.(skill, task)}
               className={`p-4 rounded-xl border-l-4 ${colorClasses.border} ${urgency?.bg} hover:shadow-md transition-all cursor-pointer group`}
             >
               <div className="flex items-start justify-between">
@@ -97,7 +97,7 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
                       {task.name}
                     </h4>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{project.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{skill.name}</p>
                   {task.deadline && (
                     <div className={`flex items-center space-x-1 text-sm ${urgency?.color}`}>
                       <Clock className="w-3 h-3" />
