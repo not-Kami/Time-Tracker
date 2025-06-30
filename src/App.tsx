@@ -10,7 +10,7 @@ import { CategoryCard } from './components/CategoryCard';
 import { ProjectCard } from './components/ProjectCard';
 import { ProjectDetail } from './components/ProjectDetail';
 import { ProfilePage } from './components/ProfilePage';
-import { CreateSkillModal } from './components/CreateSkillModal';
+import { CreateProjectModal } from './components/CreateProjectModal';
 import { CreateCategoryModal } from './components/CreateCategoryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { TimerToast } from './components/TimerToast';
@@ -517,7 +517,7 @@ function AppContent() {
           <GamificationPanel skills={skills} />
         </div>
 
-        <CreateSkillModal
+        <CreateProjectModal
           categories={categories}
           selectedCategoryId={selectedCategoryId || undefined}
           isOpen={isCreateSkillModalOpen}
@@ -664,7 +664,7 @@ function AppContent() {
         </div>
       </div>
 
-      <CreateSkillModal
+      <CreateProjectModal
         categories={categories}
         selectedCategoryId={selectedCategoryId || undefined}
         isOpen={isCreateSkillModalOpen}
