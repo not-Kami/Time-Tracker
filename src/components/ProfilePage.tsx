@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { ArrowLeft, User, Calendar, Trophy, Star, Download, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
-import { Project } from '../types';
+import { Skill } from '../types';
 import { getAchievementLevel, formatHours } from '../utils/helpers';
 
 interface ProfilePageProps {
-  projects: Project[];
+  skills: Skill[];
   onBack: () => void;
   onExport: () => void;
   isSoundEnabled: boolean;
   onToggleSound: () => void;
 }
 
-export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onToggleSound }: ProfilePageProps) {
+export function ProfilePage({ skills, onBack, onExport, isSoundEnabled, onToggleSound }: ProfilePageProps) {
   const [name, setName] = useState('Alex Johnson');
   const [nickname, setNickname] = useState('Alex');
   const [dateOfBirth, setDateOfBirth] = useState('1990-05-15');
@@ -24,12 +24,12 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
   const [passwordError, setPasswordError] = useState('');
 
   // Calculate user stats
-  const totalTime = projects.reduce((sum, project) => sum + project.totalTime, 0);
-  const totalTasks = projects.reduce((sum, project) => sum + project.tasks.length, 0);
-  const completedTasks = projects.reduce((sum, project) => 
-    sum + project.tasks.filter(task => task.completed).length, 0
+  const totalTime = skills.reduce((sum, skill) => sum + skill.totalTime, 0);
+  const totalTasks = skills.reduce((sum, skill) => sum + skill.tasks.length, 0);
+  const completedTasks = skills.reduce((sum, skill) => 
+    sum + skill.tasks.filter(task => task.completed).length, 0
   );
-  const totalSessions = projects.reduce((sum, project) => sum + project.sessions.length, 0);
+  const totalSessions = skills.reduce((sum, skill) => sum + skill.sessions.length, 0);
   const achievement = getAchievementLevel(totalTime);
 
   const handlePasswordChange = (e: React.FormEvent) => {
@@ -310,9 +310,9 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
           <div className="space-y-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
-                {projects.length}
+                {skills.length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 text-center">Active Projects</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 text-center">Active Skills</div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400 text-center">

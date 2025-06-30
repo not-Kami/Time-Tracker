@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Play, Pause, Square, Timer, Coffee, Minimize2, Maximize2, X, Eye, EyeOff } from 'lucide-react';
-import { Project, Category, TimerState } from '../types';
+import { Skill, Category, TimerState } from '../types';
 import { formatDetailedTime, getCategoryColor } from '../utils/helpers';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TimerToastProps {
-  project: Project;
+  skill: Skill;
   category: Category;
   timerState: TimerState;
   onPause: () => void;
@@ -18,7 +18,7 @@ interface TimerToastProps {
 }
 
 export function TimerToast({
-  project,
+  skill,
   category,
   timerState,
   onPause,
@@ -39,8 +39,8 @@ export function TimerToast({
   const displayTime = pomodoroMode ? pomodoroTimeLeft : timerState.elapsedTime;
   
   // Calculate progress for custom pomodoro settings
-  const focusTimeMs = project.pomodoroSettings.focusTime * 60 * 1000;
-  const breakTimeMs = project.pomodoroSettings.breakTime * 60 * 1000;
+  const focusTimeMs = skill.pomodoroSettings.focusTime * 60 * 1000;
+  const breakTimeMs = skill.pomodoroSettings.breakTime * 60 * 1000;
   const totalTimeMs = isBreak ? breakTimeMs : focusTimeMs;
   const progressPercent = pomodoroMode ? ((totalTimeMs - pomodoroTimeLeft) / totalTimeMs) * 100 : 0;
 
@@ -81,7 +81,7 @@ export function TimerToast({
             {!isMinimized && (
               <div>
                 <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                  {project.name}
+                  {skill.name}
                 </div>
                 <div className={`text-xs px-2 py-1 rounded-full ${colorClasses.bg} ${colorClasses.text} dark:bg-opacity-20`}>
                   {category.name}
@@ -91,7 +91,7 @@ export function TimerToast({
           </div>
           
           <div className="flex items-center space-x-1">
-            {project.pomodoroSettings.enabled && !isMinimized && (
+            {skill.pomodoroSettings.enabled && !isMinimized && (
               <button
                 onClick={onTogglePomodoro}
                 className={`p-2 rounded-lg transition-colors ${
@@ -128,13 +128,13 @@ export function TimerToast({
           <div className={`${isMinimized ? 'text-lg' : 'text-2xl'} font-mono font-bold text-gray-900 dark:text-white`}>
             {formatDetailedTime(displayTime)}
           </div>
-          {!isMinimized && pomodoroMode && project.pomodoroSettings.enabled && (
+          {!isMinimized && pomodoroMode && skill.pomodoroSettings.enabled && (
             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center space-x-1">
               {isBreak ? <Coffee className="w-4 h-4" /> : <Timer className="w-4 h-4" />}
               <span>
                 {isBreak 
-                  ? `${t('timer.breakTime')} (${project.pomodoroSettings.breakTime}m)` 
-                  : `${t('timer.focusTime')} (${project.pomodoroSettings.focusTime}m)`
+                  ? `${t('timer.breakTime')} (${skill.pomodoroSettings.breakTime}m)` 
+                  : `${t('timer.focusTime')} (${skill.pomodoroSettings.focusTime}m)`
                 }
               </span>
             </div>
@@ -169,7 +169,7 @@ export function TimerToast({
         )}
 
         {/* Progress bar for pomodoro */}
-        {!isMinimized && pomodoroMode && project.pomodoroSettings.enabled && (
+        {!isMinimized && pomodoroMode && skill.pomodoroSettings.enabled && (
           <div className="mt-3">
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
