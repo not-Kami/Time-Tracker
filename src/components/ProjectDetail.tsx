@@ -127,6 +127,9 @@ export function ProjectDetail({
   };
 
   const toggleTask = (taskId: string) => {
+    const task = skill.tasks.find(t => t.id === taskId);
+    const wasCompleted = task?.completed || false;
+    
     const updatedTasks = skill.tasks.map(task =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     );
@@ -139,8 +142,17 @@ export function ProjectDetail({
 
     onUpdateSkill(updatedSkill);
     
-    // Trigger sound notification
-    if (onTaskToggle) {
+    // Check if all tasks are now completed and play sound
+    const allTasksCompleted = updatedTasks.length > 0 && updatedTasks.every(t => t.completed);
+    const wasAllCompleted = skill.tasks.length > 0 && skill.tasks.every(t => t.completed);
+    
+    if (allTasksCompleted && !wasAllCompleted) {
+      // All tasks just got completed - play celebration sound
+      if (onTaskToggle) {
+        onTaskToggle('all-tasks-completed');
+      }
+    } else if (onTaskToggle && !wasCompleted) {
+      // Single task completed
       onTaskToggle(taskId);
     }
   };
@@ -299,20 +311,28 @@ export function ProjectDetail({
                 </div>
               </div>
 
-              {/* Pomodoro Mode Switch */}
+              {/* Pomodoro Mode Toggle */}
               {skill.pomodoroSettings.enabled && (
                 <div className="flex items-center justify-center space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                   <Timer className="w-5 h-5 text-red-600 dark:text-red-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Start with Pomodoro Mode
+                    Pomodoro
                   </span>
-                  <input
-                    type="checkbox"
-                    checked={startWithPomodoro}
-                    onChange={(e) => setStartWithPomodoro(e.target.checked)}
-                    className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  <button
+                    onClick={() => setStartWithPomodoro(!startWithPomodoro)}
                     disabled={timerState.status !== 'idle'}
-                  />
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                      startWithPomodoro 
+                        ? 'bg-red-600' 
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    } ${timerState.status !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        startWithPomodoro ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
               )}
 

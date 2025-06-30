@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-type SoundType = 'pomodoro-complete' | 'break-complete' | 'goal-reached' | 'task-completed' | 'achievement-unlocked';
+type SoundType = 'pomodoro-complete' | 'break-complete' | 'goal-reached' | 'task-completed' | 'achievement-unlocked' | 'all-tasks-completed';
 
 export function useSoundNotifications() {
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -82,6 +82,17 @@ export function useSoundNotifications() {
           // Quick success sound
           createTone(659.25, 0.2); // E5
           setTimeout(() => createTone(783.99, 0.3), 100); // G5
+          break;
+
+        case 'all-tasks-completed':
+          // Celebration fanfare - longer and more elaborate
+          createTone(523.25, 0.3); // C5
+          setTimeout(() => createTone(659.25, 0.3), 100); // E5
+          setTimeout(() => createTone(783.99, 0.3), 200); // G5
+          setTimeout(() => createTone(1046.50, 0.4), 300); // C6
+          setTimeout(() => createTone(1318.51, 0.4), 400); // E6
+          setTimeout(() => createTone(1567.98, 0.6), 500); // G6
+          setTimeout(() => createTone(2093.00, 0.8), 600); // C7
           break;
 
         case 'achievement-unlocked':

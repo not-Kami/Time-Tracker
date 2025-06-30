@@ -22,7 +22,9 @@ export function formatTime(milliseconds: number): string {
 export function formatHours(milliseconds: number): string {
   const hours = milliseconds / (1000 * 60 * 60);
   if (hours >= 1) {
-    return `${hours.toFixed(1)}h`;
+    // Round to nearest 0.5
+    const rounded = Math.round(hours * 2) / 2;
+    return `${rounded}h`;
   }
   const minutes = Math.floor(milliseconds / (1000 * 60));
   return `${minutes}m`;

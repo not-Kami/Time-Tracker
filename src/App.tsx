@@ -233,9 +233,17 @@ function AppContent() {
     const skill = findSkillById(skillId);
     if (!skill) return;
 
-    const task = skill.tasks.find(t => t.id === taskId);
-    if (task && !task.completed && isSoundEnabled) {
-      playSound('task-completed');
+    if (taskId === 'all-tasks-completed') {
+      // All tasks completed sound
+      if (isSoundEnabled) {
+        playSound('all-tasks-completed');
+      }
+    } else {
+      // Single task completed sound
+      const task = skill.tasks.find(t => t.id === taskId);
+      if (task && !task.completed && isSoundEnabled) {
+        playSound('task-completed');
+      }
     }
   };
 
