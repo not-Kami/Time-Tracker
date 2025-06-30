@@ -30,44 +30,52 @@ export function useSoundNotifications() {
     };
   }, [isSoundEnabled]);
 
-  const createTone = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
+  const createTone = (frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
     if (!audioContextRef.current || !isSoundEnabled) return;
 
-    const oscillator = audioContextRef.current.createOscillator();
-    const gainNode = audioContextRef.current.createGain();
+    try {
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContextRef.current.destination);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
 
-    oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
-    oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.type = type;
 
-    // Envelope for smooth sound
-    gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContextRef.current.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + duration);
+      // Envelope for smooth sound
+      gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volume, audioContextRef.current.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + duration);
 
-    oscillator.start(audioContextRef.current.currentTime);
-    oscillator.stop(audioContextRef.current.currentTime + duration);
+      oscillator.start(audioContextRef.current.currentTime);
+      oscillator.stop(audioContextRef.current.currentTime + duration);
+    } catch (error) {
+      console.warn('Error creating tone:', error);
+    }
   };
 
   const playSound = (soundType: SoundType) => {
     if (!audioContextRef.current || !isSoundEnabled) return;
 
+    console.log('Playing sound:', soundType); // Debug log
+
     try {
       switch (soundType) {
         case 'pomodoro-complete':
-          // Gentle bell sound - C major chord
-          createTone(523.25, 0.5); // C5
-          setTimeout(() => createTone(659.25, 0.5), 100); // E5
-          setTimeout(() => createTone(783.99, 0.8), 200); // G5
+          // Gentle bell sound - C major chord (Pomodoro session ended, break starts)
+          console.log('Playing pomodoro complete sound');
+          createTone(523.25, 0.6, 'sine', 0.4); // C5
+          setTimeout(() => createTone(659.25, 0.6, 'sine', 0.3), 100); // E5
+          setTimeout(() => createTone(783.99, 0.8, 'sine', 0.2), 200); // G5
           break;
 
         case 'break-complete':
-          // Soft chime - F major chord
-          createTone(349.23, 0.4); // F4
-          setTimeout(() => createTone(440.00, 0.4), 80); // A4
-          setTimeout(() => createTone(523.25, 0.6), 160); // C5
+          // Soft chime - F major chord (Break ended, focus starts)
+          console.log('Playing break complete sound');
+          createTone(349.23, 0.5, 'sine', 0.3); // F4
+          setTimeout(() => createTone(440.00, 0.5, 'sine', 0.25), 80); // A4
+          setTimeout(() => createTone(523.25, 0.7, 'sine', 0.2), 160); // C5
           break;
 
         case 'goal-reached':

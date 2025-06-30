@@ -22,25 +22,27 @@ export function usePomodoro(skill: Skill | null, onPomodoroComplete?: () => void
       setPomodoroTimeLeft(prev => {
         if (prev <= 1000) {
           // Time's up! Switch between focus and break
-          const wasBreak = isBreak;
-          
-          setIsBreak(current => {
-            const newIsBreak = !current;
+          setIsBreak(currentIsBreak => {
+            const newIsBreak = !currentIsBreak;
             
             // Trigger sound callbacks when switching
-            if (wasBreak && !newIsBreak) {
-              // Break ended, focus starts
-              onBreakComplete?.();
-            } else if (!wasBreak && newIsBreak) {
-              // Pomodoro ended, break starts
-              onPomodoroComplete?.();
-            }
+            setTimeout(() => {
+              if (currentIsBreak) {
+                // Break just ended, focus starts
+                onBreakComplete?.();
+              } else {
+                // Pomodoro just ended, break starts
+                onPomodoroComplete?.();
+              }
+            }, 100); // Small delay to ensure state is updated
             
             return newIsBreak;
           });
           
           const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
           const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
+          
+          // Return the time for the NEW state (opposite of current)
           return isBreak ? focusTime : breakTime;
         }
         return prev - 1000;

@@ -209,7 +209,7 @@ const translations = {
     'skill.breakTimeMinutes': 'Break Time (minutes)',
     
     // Pomodoro
-    'pomodoro.title': 'Pomodoro Stats',
+    'pomodoro.title': 'Pomodoro',
     'pomodoro.completedSessions': 'Completed Sessions',
     'pomodoro.focusTime': 'Focus Time',
     'pomodoro.breakTime': 'Break Time',
@@ -237,6 +237,7 @@ const translations = {
     'common.yes': 'Yes',
     'common.no': 'No',
     'common.confirm': 'Confirm',
+    'common.optional': 'optional',
     
     // Authentication
     'auth.welcomeBack': 'Welcome Back',
@@ -321,6 +322,7 @@ const translations = {
     'common.yes': 'Oui',
     'common.no': 'Non',
     'common.confirm': 'Confirmer',
+    'common.optional': 'optionnel',
   },
   // Add other languages with skill-focused translations...
   es: {
@@ -329,6 +331,7 @@ const translations = {
     'skills.new': 'Nueva Habilidad',
     'dashboard.activeSkills': 'Habilidades Activas',
     'common.loading': 'Cargando...',
+    'common.optional': 'opcional',
   },
   it: {
     'app.title': 'TimeXP',
@@ -336,6 +339,7 @@ const translations = {
     'skills.new': 'Nuova Competenza',
     'dashboard.activeSkills': 'Competenze Attive',
     'common.loading': 'Caricamento...',
+    'common.optional': 'opzionale',
   },
   de: {
     'app.title': 'TimeXP',
@@ -343,6 +347,7 @@ const translations = {
     'skills.new': 'Neue Fähigkeit',
     'dashboard.activeSkills': 'Aktive Fähigkeiten',
     'common.loading': 'Laden...',
+    'common.optional': 'optional',
   },
   nl: {
     'app.title': 'TimeXP',
@@ -350,6 +355,7 @@ const translations = {
     'skills.new': 'Nieuwe Vaardigheid',
     'dashboard.activeSkills': 'Actieve Vaardigheden',
     'common.loading': 'Laden...',
+    'common.optional': 'optioneel',
   },
   pt: {
     'app.title': 'TimeXP',
@@ -357,6 +363,7 @@ const translations = {
     'skills.new': 'Nova Habilidade',
     'dashboard.activeSkills': 'Habilidades Ativas',
     'common.loading': 'Carregando...',
+    'common.optional': 'opcional',
   },
   sv: {
     'app.title': 'TimeXP',
@@ -364,6 +371,7 @@ const translations = {
     'skills.new': 'Ny Färdighet',
     'dashboard.activeSkills': 'Aktiva Färdigheter',
     'common.loading': 'Laddar...',
+    'common.optional': 'valfritt',
   },
 };
 
