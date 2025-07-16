@@ -6,10 +6,10 @@ import { getCategoryColor } from '../utils/helpers';
 interface UpcomingTasksProps {
   skills: Skill[];
   categories: Category[];
-  onTaskClick?: (skill: Skill, task: Task) => void;
+  onTaskClick?: (skill: Skill) => void;
 }
 
-export function UpcomingTasks({ skills = [], categories = [], onTaskClick }: UpcomingTasksProps) {
+export function UpcomingTasks({ skills, categories, onTaskClick }: UpcomingTasksProps) {
   // Get all incomplete tasks with deadlines
   const upcomingTasks = skills
     .flatMap(skill => 
@@ -86,7 +86,7 @@ export function UpcomingTasks({ skills = [], categories = [], onTaskClick }: Upc
           return (
             <div
               key={`${skill.id}-${task.id}`}
-              onClick={() => onTaskClick?.(skill, task)}
+              onClick={() => onTaskClick?.(skill)}
               className={`p-4 rounded-xl border-l-4 ${colorClasses.border} ${urgency?.bg} hover:shadow-md transition-all cursor-pointer group`}
             >
               <div className="flex items-start justify-between">
