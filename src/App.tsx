@@ -468,31 +468,29 @@ function AppContent() {
       >
         <div className="space-y-8">
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                    {formatHours(totalTime)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.totalTime')}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                  {formatHours(totalTime)}
                 </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.totalTime')}</div>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                    {data.skills.length}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.activeSkills')}</div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                  {data.skills.length}
                 </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.activeSkills')}</div>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                    {completedTasks}/{totalTasks}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.tasksCompleted')}</div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                  {completedTasks}/{totalTasks}
                 </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.tasksCompleted')}</div>
               </div>
             </div>
           </div>

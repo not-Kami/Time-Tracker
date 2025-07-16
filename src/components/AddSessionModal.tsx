@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { X, Clock, Calendar } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -15,6 +16,20 @@ export function AddSessionModal({ isOpen, onClose, onAddSession }: AddSessionMod
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [description, setDescription] = useState('');
   const { t } = useLanguage();
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [isOpen, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

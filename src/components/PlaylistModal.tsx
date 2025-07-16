@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { X, Music, Plus, ExternalLink, Trash2 } from 'lucide-react';
 import { Playlist } from '../types';
 import { generateId } from '../utils/helpers';
@@ -22,6 +23,20 @@ export function PlaylistModal({
   const [name, setName] = useState(playlist?.name || '');
   const [url, setUrl] = useState(playlist?.url || '');
   const { t } = useLanguage();
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [isOpen, onClose]);
 
   const detectPlatform = (url: string): 'spotify' | 'youtube' | 'apple' | 'other' => {
     if (url.includes('spotify.com')) return 'spotify';

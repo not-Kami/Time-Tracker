@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';

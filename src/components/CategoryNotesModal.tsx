@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { X, FileText, Plus, Edit3, Save, Trash2 } from 'lucide-react';
 import { Category, Note } from '../types';
 import { MarkdownEditor } from './MarkdownEditor';

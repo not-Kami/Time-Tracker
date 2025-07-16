@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { X, User, Calendar, Lock, Bell, Download, Eye, EyeOff, Volume2, VolumeX, Trophy, Star } from 'lucide-react';
 import { Project } from '../types';
 import { getAchievementLevel, formatHours } from '../utils/helpers';
@@ -28,6 +29,20 @@ export function SettingsModal({ isOpen, onClose, onExport, isSoundEnabled, onTog
   const [passwordError, setPasswordError] = useState('');
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'data' | 'audio'>('profile');
   const { t } = useLanguage();
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      return () => document.removeEventListener('keydown', handleEscKey);
+    }
+  }, [isOpen, onClose]);
 
   // Calculate user stats for profile
   const totalTime = projects.reduce((sum, project) => sum + project.totalTime, 0);
