@@ -74,7 +74,7 @@ export function TimerToast({
     return (
       <button
         onClick={() => setIsHidden(false)}
-        className="fixed bottom-6 right-6 z-50 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-pulse"
+        className="fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-pulse"
         title={t('toast.show')}
       >
         <Timer className="w-5 h-5" />
@@ -83,7 +83,7 @@ export function TimerToast({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
+    <div className="fixed bottom-6 right-6 z-40 animate-in slide-in-from-bottom-2 duration-300">
       <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-2 ${
         isBreak && pomodoroMode 
           ? 'border-blue-500 dark:border-blue-400' 
@@ -104,6 +104,15 @@ export function TimerToast({
               <div>
                 <div className="font-semibold text-gray-900 dark:text-white text-sm">
                   {skill.name}
+                  {pomodoroMode && (
+                    <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      isBreak 
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                    }`}>
+                      🍅 {isBreak ? 'Break' : 'Focus'}
+                    </span>
+                  )}
                 </div>
                 <div className={`text-xs px-2 py-1 rounded-full text-center ${
                   isBreak && pomodoroMode 

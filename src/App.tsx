@@ -214,7 +214,16 @@ function AppContent() {
   };
 
   const handleStartTimer = (skillId: string) => {
+    const skill = findSkillById(skillId);
+    if (!skill) return;
+    
     setActiveTimerSkillId(skillId);
+    
+    // If skill has pomodoro enabled and we want to start with pomodoro, enable it
+    if (skill.pomodoroSettings.enabled) {
+      // The pomodoro will be handled by the usePomodoro hook
+    }
+    
     startTimer();
   };
 

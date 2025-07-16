@@ -59,17 +59,6 @@ export function ProjectDetail({
 
   const handleTimerAction = () => {
     if (timerState.status === 'idle') {
-      // If starting timer with pomodoro mode, temporarily enable it for this session
-      if (startWithPomodoro && !skill.pomodoroSettings.enabled) {
-        const tempSkill = {
-          ...skill,
-          pomodoroSettings: {
-            ...skill.pomodoroSettings,
-            enabled: true
-          }
-        };
-        onUpdateSkill(tempSkill);
-      }
       onStartTimer();
     } else if (timerState.status === 'running') {
       onPauseTimer();
@@ -313,22 +302,26 @@ export function ProjectDetail({
 
               {/* Pomodoro Mode Toggle */}
               {skill.pomodoroSettings.enabled && (
-                <div className="flex items-center justify-center space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <div className={`flex items-center justify-center space-x-3 p-4 rounded-xl border transition-all ${
+                  startWithPomodoro 
+                    ? 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700' 
+                    : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                }`}>
                   <Timer className="w-5 h-5 text-red-600 dark:text-red-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Pomodoro
+                    {startWithPomodoro ? 'Pomodoro Mode ON' : 'Pomodoro Mode OFF'}
                   </span>
                   <button
                     onClick={() => setStartWithPomodoro(!startWithPomodoro)}
                     disabled={timerState.status !== 'idle'}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
                       startWithPomodoro 
-                        ? 'bg-red-600' 
-                        : 'bg-gray-200 dark:bg-gray-700'
+                        ? 'bg-red-600 shadow-lg' 
+                        : 'bg-gray-300 dark:bg-gray-600'
                     } ${timerState.status !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 shadow-md ${
                         startWithPomodoro ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />

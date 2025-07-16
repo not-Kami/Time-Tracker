@@ -9,14 +9,19 @@ export function usePomodoro(skill: Skill | null, onPomodoroComplete?: () => void
   const [breakAdviceShown, setBreakAdviceShown] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
-  // Initialize pomodoro time when skill changes or mode is enabled
+  // Auto-start pomodoro when skill has it enabled and timer starts
   useEffect(() => {
-    if (skill && skill.pomodoroSettings.enabled && pomodoroMode) {
+    if (skill && skill.pomodoroSettings.enabled) {
+      if (!pomodoroMode) {
+        setPomodoroMode(true);
+        setIsBreak(false);
+        setBreakAdviceShown(false);
+      }
       const focusTime = skill.pomodoroSettings.focusTime * 60 * 1000;
       const breakTime = skill.pomodoroSettings.breakTime * 60 * 1000;
       setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
     }
-  }, [skill, pomodoroMode, isBreak]);
+  }, [skill, isBreak]);
 
   // Pomodoro countdown logic
   useEffect(() => {
@@ -95,7 +100,7 @@ export function usePomodoro(skill: Skill | null, onPomodoroComplete?: () => void
   };
 
   const togglePomodoro = () => {
-    if (!skill?.pomodoroSettings.enabled) return;
+    if (!skill) return;
     
     const newPomodoroMode = !pomodoroMode;
     setPomodoroMode(newPomodoroMode);
@@ -120,7 +125,7 @@ export function usePomodoro(skill: Skill | null, onPomodoroComplete?: () => void
   };
 
   return {
-    pomodoroMode: pomodoroMode && skill?.pomodoroSettings.enabled,
+    pomodoroMode: pomodoroMode,
     isBreak,
     pomodoroTimeLeft,
     isPaused,
