@@ -92,7 +92,7 @@ export function useTimer() {
 
     // Filter out sessions shorter than 5 minutes (300,000 ms)
     if (timerState.elapsedTime < 5 * 60 * 1000) {
-      console.log('Session filtered out: less than 5 minutes');
+      
       return null;
     }
 

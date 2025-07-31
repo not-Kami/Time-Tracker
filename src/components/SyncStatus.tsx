@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { ChevronDown, ChevronUp, Clock, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, AlertCircle, TestTube } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface SyncStatusProps {
   className?: string;
@@ -20,6 +21,48 @@ export function SyncStatus({ className = '' }: SyncStatusProps) {
   } = useLocalStorage();
   
   const [showDetails, setShowDetails] = useState(false);
+  const [testResult, setTestResult] = useState<string>('');
+
+  // Fonction de test pour vérifier la connexion Supabase
+  const testSupabaseConnection = async () => {
+    setTestResult('Test en cours...');
+    try {
+      // Vérifier l'authentification
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+      
+      if (authError) {
+        setTestResult(`❌ Erreur d'authentification: ${authError.message}`);
+        return;
+      }
+      
+      if (!user) {
+        setTestResult('❌ Aucun utilisateur connecté');
+        return;
+      }
+      
+      // Tester la connexion à la base de données
+      const { data, error: dbError } = await supabase
+        .from('user_data')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (dbError) {
+        setTestResult(`❌ Erreur de base de données: ${dbError.message}`);
+        return;
+      }
+      
+      setTestResult(`✅ Connecté en tant que ${user.email} - Base de données accessible`);
+      
+      // Forcer une synchronisation de test
+      
+      await syncData('upload');
+      
+    } catch (error) {
+      setTestResult(`❌ Erreur de test: ${error}`);
+    }
+  };
 
   const formatLastSync = (date: Date | null) => {
     if (!date) return 'Jamais';
@@ -182,6 +225,29 @@ export function SyncStatus({ className = '' }: SyncStatusProps) {
               </div>
             </div>
           )}
+
+          {/* Bouton de test */}
+          <div className="space-y-2">
+            <button
+              onClick={testSupabaseConnection}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-xs"
+            >
+              <TestTube className="w-3 h-3" />
+              Tester la connexion
+            </button>
+            
+            {testResult && (
+              <div className={`text-xs p-2 rounded ${
+                testResult.startsWith('✅') 
+                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                  : testResult.startsWith('❌')
+                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                  : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+              }`}>
+                {testResult}
+              </div>
+            )}
+          </div>
 
           {/* Avertissements */}
           {!isOnline && (

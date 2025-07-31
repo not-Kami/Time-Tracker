@@ -82,7 +82,7 @@ export function OnboardingForm({ onComplete, loading = false }: OnboardingFormPr
   };
 
   const nextStep = () => {
-    console.log('Next step clicked, canProceed:', canProceed(), 'step:', step);
+
     if (canProceed() && step < 3) {
       setStep(step + 1);
     }

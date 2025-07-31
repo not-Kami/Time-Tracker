@@ -21,6 +21,7 @@ import { UpcomingTasks } from './components/UpcomingTasks';
 import { OnboardingForm, OnboardingData } from './components/Auth/OnboardingForm';
 import { OnboardingGuide } from './components/OnboardingGuide';
 import { AdminPanel } from './components/Admin/AdminPanel';
+import { DefaultCategoriesPanel } from './components/DefaultCategoriesPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTimer } from './hooks/useTimer';
 import { usePomodoro } from './hooks/usePomodoro';
@@ -32,7 +33,7 @@ import { generateId, getAchievementLevel, formatHours } from './utils/helpers';
 type View = 'dashboard' | 'project' | 'category' | 'profile';
 
 function AppContent({ showGuide = false }: { showGuide?: boolean }) {
-  const { data, saveData, exportData, resetData, isLoaded } = useLocalStorage();
+  const { data, saveData, exportData, resetData, isLoaded, triggerSync } = useLocalStorage();
   const { timerState, startTimer, pauseTimer, resumeTimer, stopTimer } = useTimer();
   const { playSound, isSoundEnabled, toggleSound } = useSoundNotifications();
   const { t } = useLanguage();
@@ -52,16 +53,10 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   const handleShowAdmin = useCallback(() => {
-    console.log('handleShowAdmin called, setting showAdminPanel to true');
     setShowAdminPanel(true);
     // Force a re-render by updating a different state
     setCurrentView(currentView);
   }, [currentView]);
-
-  // Debug: Log when showAdminPanel changes
-  useEffect(() => {
-    console.log('showAdminPanel changed to:', showAdminPanel);
-  }, [showAdminPanel]);
 
   const activeProject = activeTimerProjectId ? data.projects.find(p => p.id === activeTimerProjectId) : null;
   const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro, forceResume } = usePomodoro(activeProject, {
@@ -168,25 +163,31 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
     };
 
     saveData(updatedData);
+    
+    // Déclencher la synchronisation avec Supabase
+    triggerSync.project();
   };
 
-  const handleCreateCategory = (name: string, color: string, icon: string) => {
-    const newCategory: Category = {
-      id: generateId(),
-      name,
-      color,
-      icon,
-      createdAt: new Date(),
-      notes: [],
-    };
+      const handleCreateCategory = (name: string, color: string, icon: string) => {
+      const newCategory: Category = {
+        id: generateId(),
+        name,
+        color,
+        icon,
+        createdAt: new Date(),
+        notes: [],
+      };
 
-    const updatedData = {
-      ...data,
-      categories: [...data.categories, newCategory],
-    };
+      const updatedData = {
+        ...data,
+        categories: [...data.categories, newCategory],
+      };
 
-    saveData(updatedData);
-  };
+      saveData(updatedData);
+      
+      // Déclencher la synchronisation avec Supabase
+      triggerSync.category();
+    };
 
   const handleUpdateProject = (updatedProject: Project) => {
     const updatedProjects = data.projects.map(project =>
@@ -200,6 +201,9 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
 
     saveData(updatedData);
     setSelectedProject(updatedProject);
+    
+    // Déclencher la synchronisation avec Supabase
+    triggerSync.project();
   };
 
   const handleTogglePin = (projectId: string) => {
@@ -251,6 +255,9 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
           updatedAt: new Date(),
         };
         handleUpdateProject(updatedProject);
+
+        // Déclencher la synchronisation spécifique pour les sessions
+        triggerSync.session();
 
         // Check for goal achievements
         if (isSoundEnabled) {
@@ -335,6 +342,24 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
     };
 
     saveData(updatedData);
+    
+    // Déclencher la synchronisation avec Supabase
+    triggerSync.category();
+  };
+
+  const handleAdoptCategory = (category: Category) => {
+    const updatedData = {
+      ...data,
+      categories: [...data.categories, category],
+    };
+    
+    saveData(updatedData);
+    triggerSync.category();
+  };
+
+  const handleShowTrendingSkills = () => {
+    // TODO: Implémenter l'affichage des skills trending
+    console.log('Show trending skills');
   };
 
   const handleTaskClick = (project: Project) => {
@@ -529,6 +554,13 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
             onTaskClick={handleTaskClick}
           />
 
+          {/* Default Categories Panel */}
+          <DefaultCategoriesPanel
+            userCategories={data.categories}
+            onAdoptCategory={handleAdoptCategory}
+            onShowTrendingSkills={handleShowTrendingSkills}
+          />
+
           {/* Categories Section */}
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -654,7 +686,6 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
         onCreateCategory={handleCreateCategory}
         onAddSkill={(categoryId, skillName) => {
           // TODO: Implement skill creation
-          console.log('Adding skill:', skillName, 'to category:', categoryId);
         }}
         selectedSkills={[]} // TODO: Get from userProfile
       />
@@ -662,9 +693,7 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
   }
 
   // Show admin panel if requested
-  console.log('AppContent render - showAdminPanel:', showAdminPanel);
   if (showAdminPanel) {
-    console.log('Rendering AdminPanel, showAdminPanel:', showAdminPanel);
     return <AdminPanel onBack={() => setShowAdminPanel(false)} />;
   }
 
@@ -672,7 +701,6 @@ function AppContent({ showGuide = false }: { showGuide?: boolean }) {
     <Layout
       sidebar={
         (() => {
-                  console.log('Rendering Sidebar with handleShowAdmin:', typeof handleShowAdmin);
         return (
           <Sidebar
             categories={data.categories}
@@ -896,7 +924,7 @@ function AdminRoute() {
     return <Navigate to="/" replace />;
   }
   
-  return <AdminPanel onBack={() => window.history.back()} />;
+  return <AdminPanel onBack={() => window.history.back()} userProfile={userProfile} />;
 }
 
 export default App;

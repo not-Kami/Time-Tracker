@@ -5,6 +5,7 @@ import { getAchievementLevel, formatHours } from '../utils/helpers';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { SyncStatus } from './SyncStatus';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -621,57 +622,8 @@ export function SettingsModal({ isOpen, onClose, onExport, onResetData, isSoundE
 
                   {/* Sync Status */}
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Synchronisation</h4>
-                      <div className="flex items-center space-x-2">
-                        {isOnline ? (
-                          <Cloud className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <CloudOff className="w-4 h-4 text-red-500" />
-                        )}
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {isOnline ? 'En ligne' : 'Hors ligne'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Dernière synchronisation:</span>
-                        <span className="text-gray-900 dark:text-white">
-                          {lastSync ? lastSync.toLocaleString('fr-FR') : 'Jamais'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => syncData('upload')}
-                          disabled={!isOnline || isSyncing}
-                          className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                        >
-                          <Cloud className="w-4 h-4" />
-                          <span>Sauvegarder</span>
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={() => syncData('download')}
-                          disabled={!isOnline || isSyncing}
-                          className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          <span>Restaurer</span>
-                        </button>
-                      </div>
-                      
-                      {isSyncing && (
-                        <div className="flex items-center justify-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Synchronisation en cours...</span>
-                        </div>
-                      )}
-                    </div>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Synchronisation</h4>
+                    <SyncStatus />
                   </div>
 
                   <button

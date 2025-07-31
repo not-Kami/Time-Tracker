@@ -5,6 +5,8 @@ export interface Category {
   icon: string;
   createdAt: Date;
   notes?: Note[];
+  isDefault?: boolean; // Indique si c'est une catégorie par défaut
+  skills?: Skill[]; // Skills associés à cette catégorie
 }
 
 export interface Task {
@@ -82,6 +84,39 @@ export interface Skill {
   description?: string;
   popularity: number; // number of users who selected this skill
   isActive: boolean;
+  isDefault?: boolean; // Indique si c'est un skill par défaut
+  isTrending?: boolean; // Indique si le skill est trending
+  trendingReason?: string; // Raison du trending
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  targetHours?: number; // Objectif en heures
+  totalTime?: number; // Temps total passé
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Nouvelles interfaces pour les catégories et skills par défaut
+export interface DefaultCategory {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  skills: DefaultSkill[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DefaultSkill {
+  id: string;
+  name: string;
+  description?: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  isTrending: boolean;
+  trendingReason?: string;
+  isActive: boolean;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }

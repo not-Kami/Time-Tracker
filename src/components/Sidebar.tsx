@@ -44,26 +44,7 @@ export function Sidebar({
   const { user, signOut, userProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Debug: Log all props
-  console.log('Sidebar - All props:', {
-    categories: categories.length,
-    projects: projects.length,
-    selectedCategoryId,
-    onSelectCategory: typeof onSelectCategory,
-    onShowPinned: typeof onShowPinned,
-    onShowDashboard: typeof onShowDashboard,
-    onShowProfile: typeof onShowProfile,
-    showingPinned,
-    currentView,
-    onCreateCategory: typeof onCreateCategory,
-    onOpenSettings: typeof onOpenSettings,
-    onShowAdmin: typeof onShowAdmin
-  });
 
-  // Debug: Log user profile
-  console.log('Sidebar - userProfile:', userProfile);
-  console.log('Sidebar - userProfile?.role:', userProfile?.role);
-  console.log('Sidebar - should show admin:', userProfile?.role === 'admin');
 
   const getProjectCount = (categoryId: string) => {
     return projects.filter(p => p.categoryId === categoryId).length;
@@ -273,7 +254,6 @@ export function Sidebar({
             {userProfile?.role === 'admin' && (
               <button
                 onClick={() => {
-                  console.log('Admin panel button clicked - navigating to /admin');
                   navigate('/admin');
                 }}
                 className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"

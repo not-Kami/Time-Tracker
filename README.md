@@ -1,183 +1,143 @@
-# Supabase CLI
+# TimeXP - Suivi du Développement des Compétences
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+[![React](https://img.shields.io/badge/React-18.0-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-purple.svg)](https://vitejs.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.0-green.svg)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-cyan.svg)](https://tailwindcss.com/)
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+TimeXP est une application moderne de suivi du développement des compétences, construite avec React, TypeScript et Supabase. Elle vous permet de créer des catégories, des projets, de suivre votre temps de travail et de synchroniser vos données entre différents appareils.
 
-This repository contains all the functionality for Supabase CLI.
+## ✨ Fonctionnalités
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+- 🎯 **Gestion des catégories et projets** - Organisez vos compétences par catégories
+- ⏱️ **Suivi du temps** - Chronométrez vos sessions de travail avec précision
+- 🍅 **Mode Pomodoro** - Améliorez votre productivité avec la technique Pomodoro
+- 📊 **Statistiques détaillées** - Visualisez vos progrès et performances
+- 🔄 **Synchronisation cloud** - Vos données sont sauvegardées et synchronisées avec Supabase
+- 🌙 **Mode sombre** - Interface adaptée à vos préférences visuelles
+- 🌍 **Multilingue** - Support de plusieurs langues (FR, EN, ES, etc.)
+- 📱 **Responsive** - Fonctionne sur desktop, tablette et mobile
+- 🔔 **Notifications sonores** - Alertes pour les sessions et objectifs
+- 🏆 **Système de gamification** - Débloquez des succès en progressant
 
-## Getting started
+## 🚀 Installation et Configuration
 
-### Install the CLI
+### Prérequis
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+- Node.js 18+ 
+- npm ou yarn
+- Un projet Supabase (optionnel, pour la synchronisation)
 
-```bash
-npm i supabase --save-dev
-```
+### Installation
 
-To install the beta release channel:
+1. **Cloner le repository**
+   ```bash
+   git clone https://github.com/votre-username/time-tracker.git
+   cd time-tracker
+   ```
 
-```bash
-npm i supabase@beta --save-dev
-```
+2. **Installer les dépendances**
+   ```bash
+   npm install
+   ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+3. **Configurer l'environnement (optionnel)**
+   
+   Pour activer la synchronisation cloud, créez un fichier `.env` :
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Puis configurez vos variables Supabase :
+   ```env
+   VITE_SUPABASE_URL=https://your-project-id.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key-here
+   ```
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
+4. **Lancer l'application**
+   ```bash
+   npm run dev
+   ```
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+5. **Ouvrir dans le navigateur**
+   ```
+   http://localhost:5173
+   ```
 
-<details>
-  <summary><b>macOS</b></summary>
+### Configuration de la synchronisation
 
-  Available via [Homebrew](https://brew.sh). To install:
+Pour activer la synchronisation cloud avec Supabase :
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+1. Créez un projet sur [supabase.com](https://supabase.com)
+2. Exécutez le script SQL dans `add-user-data-table.sql`
+3. Configurez les variables d'environnement
+4. Consultez [docs/sync-setup.md](docs/sync-setup.md) pour plus de détails
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
+## 📚 Scripts disponibles
 
 ```bash
-supabase bootstrap
+# Développement
+npm run dev          # Lance le serveur de développement
+npm run build        # Compile pour la production
+npm run preview      # Prévisualise la build de production
+
+# Linting et formatage
+npm run lint         # Vérifie le code avec ESLint
+npm run lint:fix     # Corrige automatiquement les erreurs de linting
+
+# Tests
+npm run test         # Lance les tests
+npm run test:watch   # Lance les tests en mode watch
 ```
 
-Or using npx:
+## 🏗️ Architecture
 
-```bash
-npx supabase bootstrap
+```
+src/
+├── components/          # Composants React réutilisables
+│   ├── Auth/           # Composants d'authentification
+│   ├── Admin/          # Composants d'administration
+│   └── ...
+├── contexts/           # Contextes React (thème, langue, auth)
+├── hooks/              # Hooks personnalisés
+├── lib/                # Bibliothèques et configurations
+├── types/              # Définitions TypeScript
+└── utils/              # Utilitaires et helpers
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+## 🔧 Technologies utilisées
 
-## Docs
+- **Frontend** : React 18, TypeScript, Vite
+- **Styling** : Tailwind CSS
+- **Backend** : Supabase (PostgreSQL, Auth, Real-time)
+- **État** : React Context + LocalStorage
+- **Icons** : Lucide React
+- **Build** : Vite
 
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+## 📖 Documentation
 
-## Breaking changes
+- [Guide de synchronisation](docs/sync-setup.md) - Configuration de Supabase
+- [Schéma de base de données](TABLE.md) - Structure des tables
+- [Guide d'auto-hébergement](docs/supabase-self-host.md) - Héberger Supabase
 
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+## 🤝 Contribution
 
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+Les contributions sont les bienvenues ! Pour contribuer :
 
-## Developing
+1. Fork le projet
+2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
 
-To run from source:
+## 📄 Licence
 
-```sh
-# Go >= 1.22
-go run . help
-```
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🙏 Remerciements
+
+- [Supabase](https://supabase.com) pour l'infrastructure backend
+- [Tailwind CSS](https://tailwindcss.com) pour le styling
+- [Lucide](https://lucide.dev) pour les icônes
+- [Vite](https://vitejs.dev) pour l'outil de build

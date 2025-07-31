@@ -46,11 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to load user profile from database
   const loadUserProfile = async (userId: string) => {
     try {
-      console.log('Loading profile for user ID:', userId);
+  
       
       // First, try to get user from auth.users (this should work)
       const { data: authData, error: authError } = await supabase.auth.getUser();
-      console.log('Auth user data:', authData);
+      
       
       if (authError) {
         console.error('Error getting auth user:', authError);
@@ -62,14 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
-
-      console.log('Users table query result:', { data, error });
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading user profile from users table:', error);
-        
-        // If user doesn't exist in our table, create a default profile
+      }
+
+      // If user doesn't exist in our table or there was an error, create a default profile
+      if (!data || error) {
         if (authData.user) {
           const defaultProfile: UserProfile = {
             id: authData.user.id,
@@ -85,28 +85,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updatedAt: authData.user.updated_at || authData.user.created_at,
           };
           setUserProfile(defaultProfile);
-          console.log('Using default profile:', defaultProfile);
         }
         return;
       }
 
-      if (data) {
-        const profile: UserProfile = {
-          id: data.id,
-          email: data.email,
-          role: data.role || 'user',
-          nickname: data.nickname || '',
-          preferredLanguage: 'en',
-          selectedSkills: [],
-          timezone: data.timezone || 'UTC',
-          dailyGoal: 4,
-          hasCompletedOnboarding: true,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
-        setUserProfile(profile);
-        console.log('User profile loaded from DB:', profile);
-      }
+      // If user exists in our table, map the data to our UserProfile interface
+      const profile: UserProfile = {
+        id: data.id,
+        email: data.email,
+        role: data.email === 'admin@creative88.be' ? 'admin' : 'user', // Determine role from email
+        nickname: data.nickname || data.email?.split('@')[0] || '',
+        preferredLanguage: 'en', // Default value since not in schema
+        selectedSkills: [], // Default value since not in schema
+        timezone: data.timezone || 'UTC',
+        dailyGoal: 4, // Default value since not in schema
+        hasCompletedOnboarding: true, // Default value since not in schema
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+      setUserProfile(profile);
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
@@ -147,17 +144,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting sign in with:', { email });
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    console.log('Sign in result:', { error });
+    
     return { error };
   };
 
   const signUp = async (email: string, password: string) => {
-    console.log('Attempting sign up with:', { email });
+    
     const { error, data } = await supabase.auth.signUp({
       email,
       password,
@@ -165,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    console.log('Sign up result:', { error, data });
+    
     return { error };
   };
 

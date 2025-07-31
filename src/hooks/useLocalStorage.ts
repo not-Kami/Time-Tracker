@@ -54,7 +54,9 @@ export function useLocalStorage() {
 
   // Ajouter un événement de synchronisation
   const addSyncEvent = (trigger: SyncTrigger, priority: number = 2) => {
-    if (!autoSyncEnabled) return;
+    if (!autoSyncEnabled) {
+      return;
+    }
 
     const newEvent: SyncEvent = {
       id: `${trigger}-${Date.now()}-${Math.random()}`,
@@ -92,7 +94,9 @@ export function useLocalStorage() {
 
   // Traiter la file d'attente de synchronisation
   const processSyncQueue = async () => {
-    if (syncQueue.length === 0 || isSyncing || !isOnline) return;
+    if (syncQueue.length === 0 || isSyncing || !isOnline) {
+      return;
+    }
 
     setIsSyncing(true);
     
@@ -257,8 +261,8 @@ export function useLocalStorage() {
   const saveToSupabase = async (userData: TimeTrackerData) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        console.log('No user logged in, skipping Supabase sync');
         return { success: false, error: 'No user logged in' };
       }
 
@@ -268,6 +272,8 @@ export function useLocalStorage() {
           user_id: user.id,
           data: userData,
           last_updated: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) {
@@ -292,7 +298,6 @@ export function useLocalStorage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('No user logged in, skipping Supabase load');
         return { success: false, error: 'No user logged in' };
       }
 
