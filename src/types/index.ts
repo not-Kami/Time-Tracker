@@ -5,7 +5,6 @@ export interface Category {
   icon: string;
   createdAt: Date;
   notes?: Note[];
-  playlist?: Playlist;
 }
 
 export interface Task {
@@ -35,13 +34,7 @@ export interface Note {
   updatedAt: Date;
 }
 
-export interface Playlist {
-  id: string;
-  name: string;
-  url: string;
-  platform: 'spotify' | 'youtube' | 'apple' | 'other';
-  createdAt: Date;
-}
+
 
 export interface PomodoroSettings {
   enabled: boolean;
@@ -59,8 +52,9 @@ export interface Project {
   sessions: Session[];
   notes: Note[];
   isPinned: boolean;
+  isArchived: boolean;
   pomodoroSettings: PomodoroSettings;
-  playlist?: Playlist;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,4 +71,25 @@ export interface TimerState {
   status: TimerStatus;
   currentSession: Session | null;
   elapsedTime: number;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  color: string;
+  description?: string;
+  popularity: number; // number of users who selected this skill
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OnboardingData {
+  nickname: string;
+  preferredLanguage: string;
+  selectedSkills?: string[]; // array of skill IDs
+  timezone: string;
+  dailyGoal?: number;
 }

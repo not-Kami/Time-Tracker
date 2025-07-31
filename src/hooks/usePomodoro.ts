@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Project } from '../types';
 
-export function usePomodoro(project: Project | null) {
+interface PomodoroCallbacks {
+  onPause?: () => void;
+  onResume?: () => void;
+  onForceResume?: () => void;
+}
+
+export function usePomodoro(project: Project | null, callbacks?: PomodoroCallbacks) {
   const [pomodoroMode, setPomodoroMode] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(0);
@@ -24,6 +30,16 @@ export function usePomodoro(project: Project | null) {
           // Time's up! Switch between focus and break
           setIsBreak(current => {
             const newIsBreak = !current;
+            
+            // Synchronize with timer
+            if (newIsBreak) {
+              // Starting break - pause timer
+              callbacks?.onPause?.();
+            } else {
+              // Starting focus - resume timer
+              callbacks?.onResume?.();
+            }
+            
             return newIsBreak;
           });
           const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
@@ -35,7 +51,7 @@ export function usePomodoro(project: Project | null) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [pomodoroMode, isBreak, project]);
+  }, [pomodoroMode, isBreak, project, callbacks]);
 
   const togglePomodoro = () => {
     if (!project?.pomodoroSettings.enabled) return;
@@ -56,11 +72,24 @@ export function usePomodoro(project: Project | null) {
     setPomodoroTimeLeft(isBreak ? breakTime : focusTime);
   };
 
+  const forceResume = () => {
+    if (!project?.pomodoroSettings.enabled || !isBreak) return;
+    
+    // Skip break and go directly to focus
+    setIsBreak(false);
+    const focusTime = project.pomodoroSettings.focusTime * 60 * 1000;
+    setPomodoroTimeLeft(focusTime);
+    
+    // Resume timer immediately
+    callbacks?.onForceResume?.();
+  };
+
   return {
     pomodoroMode: pomodoroMode && project?.pomodoroSettings.enabled,
     isBreak,
     pomodoroTimeLeft,
     togglePomodoro,
     resetPomodoro,
+    forceResume,
   };
 }

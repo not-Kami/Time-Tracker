@@ -1,3 +1,5 @@
+import { User } from '@supabase/supabase-js';
+
 export function generateId(): string {
   return Math.random().toString(36).substr(2, 9);
 }
@@ -168,4 +170,156 @@ export function getCategoryColor(color: string): { bg: string; text: string; bor
   };
 
   return colors[color as keyof typeof colors] || colors.blue;
+}
+
+/**
+ * Get a smart display name for the user
+ * Priority: user_metadata.name > user_metadata.full_name > email prefix > 'User'
+ */
+export function getUserDisplayName(user: User | null): string {
+  if (!user) return 'User';
+  
+  const metadata = user.user_metadata || {};
+  
+  // Try user_metadata.name first
+  if (metadata.name && typeof metadata.name === 'string') {
+    return metadata.name;
+  }
+  
+  // Try user_metadata.full_name
+  if (metadata.full_name && typeof metadata.full_name === 'string') {
+    return metadata.full_name;
+  }
+  
+  // Fallback to email prefix
+  if (user.email) {
+    return user.email.split('@')[0];
+  }
+  
+  return 'User';
+}
+
+/**
+ * Get a smart nickname for the user
+ * Priority: user_metadata.nickname > user_metadata.preferred_username > email prefix > display name
+ */
+export function getUserNickname(user: User | null): string {
+  if (!user) return 'User';
+  
+  const metadata = user.user_metadata || {};
+  
+  // Try user_metadata.nickname
+  if (metadata.nickname && typeof metadata.nickname === 'string') {
+    return metadata.nickname;
+  }
+  
+  // Try user_metadata.preferred_username
+  if (metadata.preferred_username && typeof metadata.preferred_username === 'string') {
+    return metadata.preferred_username;
+  }
+  
+  // Fallback to email prefix
+  if (user.email) {
+    return user.email.split('@')[0];
+  }
+  
+  return 'User';
+}
+
+/**
+ * Get user's full name with fallbacks
+ * Priority: user_metadata.full_name > user_metadata.name > email prefix
+ */
+export function getUserFullName(user: User | null): string {
+  if (!user) return '';
+  
+  const metadata = user.user_metadata || {};
+  
+  // Try user_metadata.full_name
+  if (metadata.full_name && typeof metadata.full_name === 'string') {
+    return metadata.full_name;
+  }
+  
+  // Try user_metadata.name
+  if (metadata.name && typeof metadata.name === 'string') {
+    return metadata.name;
+  }
+  
+  // Fallback to email prefix
+  if (user.email) {
+    return user.email.split('@')[0];
+  }
+  
+  return '';
+}
+
+/**
+ * Get user's avatar URL with fallback
+ */
+export function getUserAvatarUrl(user: User | null): string | null {
+  if (!user) return null;
+  
+  const metadata = user.user_metadata || {};
+  
+  // Try user_metadata.avatar_url
+  if (metadata.avatar_url && typeof metadata.avatar_url === 'string') {
+    return metadata.avatar_url;
+  }
+  
+  // Try user_metadata.picture
+  if (metadata.picture && typeof metadata.picture === 'string') {
+    return metadata.picture;
+  }
+  
+  return null;
+}
+
+/**
+ * Get user's email with fallback
+ */
+export function getUserEmail(user: User | null): string {
+  return user?.email || '';
+}
+
+/**
+ * Get user's timezone
+ */
+export function getUserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Generate initials from user name
+ */
+export function getUserInitials(user: User | null): string {
+  if (!user) return 'U';
+  
+  const displayName = getUserDisplayName(user);
+  const words = displayName.split(' ');
+  
+  if (words.length >= 2) {
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+  
+  return displayName.substring(0, 2).toUpperCase();
+}
+
+/**
+ * Generate a default avatar color based on user name
+ */
+export function getUserAvatarColor(user: User | null): string {
+  if (!user) return '#6B7280';
+  
+  const displayName = getUserDisplayName(user);
+  const colors = [
+    '#EF4444', '#F59E0B', '#10B981', '#3B82F6', 
+    '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < displayName.length; i++) {
+    hash = displayName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
 }

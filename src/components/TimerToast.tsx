@@ -15,6 +15,7 @@ interface TimerToastProps {
   pomodoroTimeLeft: number;
   isBreak: boolean;
   onTogglePomodoro: () => void;
+  onForceResume?: () => void;
 }
 
 export function TimerToast({
@@ -28,6 +29,7 @@ export function TimerToast({
   pomodoroTimeLeft,
   isBreak,
   onTogglePomodoro,
+  onForceResume,
 }: TimerToastProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -165,6 +167,17 @@ export function TimerToast({
             >
               <Square className="w-5 h-5" />
             </button>
+
+            {/* Force Resume Button - only show during break */}
+            {pomodoroMode && isBreak && onForceResume && (
+              <button
+                onClick={onForceResume}
+                className="p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg shadow-purple-500/25"
+                title="Passer la pause"
+              >
+                <Play className="w-5 h-5" />
+              </button>
+            )}
           </div>
         )}
 

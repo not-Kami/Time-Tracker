@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import { Star, Plus, User, LogOut, Settings, Clock, Moon, Sun, LayoutDashboard, Globe } from 'lucide-react';
+import { Star, Plus, User, LogOut, Settings, Clock, LayoutDashboard, Globe } from 'lucide-react';
 import { Category, Project } from '../types';
-import { getCategoryColor } from '../utils/helpers';
-import { useTheme } from '../contexts/ThemeContext';
+import { getCategoryColor, getUserDisplayName } from '../utils/helpers';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,12 +13,15 @@ interface SidebarProps {
   selectedCategoryId: string | null;
   onSelectCategory: (categoryId: string | null) => void;
   onShowPinned: () => void;
+  onShowArchived?: () => void;
   onShowDashboard: () => void;
   onShowProfile: () => void;
   showingPinned: boolean;
+  showingArchived?: boolean;
   currentView: string;
   onCreateCategory: () => void;
   onOpenSettings: () => void;
+  onShowAdmin?: () => void;
 }
 
 export function Sidebar({ 
@@ -27,28 +30,40 @@ export function Sidebar({
   selectedCategoryId, 
   onSelectCategory, 
   onShowPinned,
+  onShowArchived,
   onShowDashboard,
   onShowProfile,
   showingPinned,
+  showingArchived,
   currentView,
   onCreateCategory,
-  onOpenSettings
+  onOpenSettings,
+  onShowAdmin
 }: SidebarProps) {
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const { isDark, toggleTheme } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const { user, signOut, userProfile } = useAuth();
+  const navigate = useNavigate();
 
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
-    { code: 'pt', name: 'Português', flag: '🇵🇹' },
-    { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
-  ];
+  // Debug: Log all props
+  console.log('Sidebar - All props:', {
+    categories: categories.length,
+    projects: projects.length,
+    selectedCategoryId,
+    onSelectCategory: typeof onSelectCategory,
+    onShowPinned: typeof onShowPinned,
+    onShowDashboard: typeof onShowDashboard,
+    onShowProfile: typeof onShowProfile,
+    showingPinned,
+    currentView,
+    onCreateCategory: typeof onCreateCategory,
+    onOpenSettings: typeof onOpenSettings,
+    onShowAdmin: typeof onShowAdmin
+  });
+
+  // Debug: Log user profile
+  console.log('Sidebar - userProfile:', userProfile);
+  console.log('Sidebar - userProfile?.role:', userProfile?.role);
+  console.log('Sidebar - should show admin:', userProfile?.role === 'admin');
 
   const getProjectCount = (categoryId: string) => {
     return projects.filter(p => p.categoryId === categoryId).length;
@@ -71,10 +86,18 @@ export function Sidebar({
       t('app.motivation.4'),
       t('app.motivation.5'),
     ];
-    return messages[Math.floor(Math.random() * messages.length)];
+    
+    // Use sessionStorage to keep the same message for the session
+    const sessionKey = 'motivationalMessage';
+    let messageIndex = sessionStorage.getItem(sessionKey);
+    
+    if (!messageIndex) {
+      messageIndex = Math.floor(Math.random() * messages.length).toString();
+      sessionStorage.setItem(sessionKey, messageIndex);
+    }
+    
+    return messages[parseInt(messageIndex)];
   };
-
-  const currentLanguage = languages.find(lang => lang.code === language);
 
   const handleLogoClick = () => {
     window.location.reload();
@@ -105,7 +128,7 @@ export function Sidebar({
         <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-gray-200 dark:border-gray-700">
           <div className="text-center">
             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              {getGreeting()}, {user.email?.split('@')[0]}! 👋
+              {getGreeting()}, {getUserDisplayName(user)}! 👋
             </p>
             <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               {getMotivationalMessage()}
@@ -143,6 +166,26 @@ export function Sidebar({
             {pinnedCount}
           </span>
         </button>
+
+        {/* Archived Projects */}
+        {onShowArchived && (
+          <button
+            onClick={onShowArchived}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${
+              showingArchived
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-lg'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0h14" />
+            </svg>
+            <span className="font-medium">{t('projects.archived')}</span>
+            <span className="ml-auto text-sm bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded-full text-center">
+              {projects.filter(p => p.isArchived).length}
+            </span>
+          </button>
+        )}
 
         <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
 
@@ -187,45 +230,6 @@ export function Sidebar({
 
       {/* Controls Section */}
       <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={toggleTheme}
-            className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            <span>{isDark ? t('common.light') : t('common.dark')}</span>
-          </button>
-          
-          <div className="relative">
-            <button
-              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              className="flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Globe className="w-4 h-4" />
-              <span>{currentLanguage?.flag}</span>
-            </button>
-            
-            {showLanguageMenu && (
-              <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-2 min-w-48 z-50">
-                {languages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code as 'en' | 'fr' | 'es' | 'it' | 'de' | 'nl' | 'pt' | 'sv');
-                      setShowLanguageMenu(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      language === lang.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <span className="text-lg">{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* User Section */}
         {user && (
@@ -243,7 +247,7 @@ export function Sidebar({
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user.email?.split('@')[0]}
+                  {getUserDisplayName(user)}
                 </p>
                 <p className="text-xs text-green-600 dark:text-green-400">{t('common.online')}</p>
               </div>
@@ -264,6 +268,20 @@ export function Sidebar({
                 <span className="truncate">{t('nav.logout')}</span>
               </button>
             </div>
+
+            {/* Admin Panel Access - Only for admins */}
+            {userProfile?.role === 'admin' && (
+              <button
+                onClick={() => {
+                  console.log('Admin panel button clicked - navigating to /admin');
+                  navigate('/admin');
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                <span>Admin Panel</span>
+              </button>
+            )}
           </>
         )}
       </div>

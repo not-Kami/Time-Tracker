@@ -8,6 +8,8 @@ interface SignUpFormProps {
 }
 
 export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
+  const [step, setStep] = useState<'nickname' | 'credentials' | 'success'>('nickname');
+  const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,6 +21,13 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
 
   const { signUp } = useAuth();
   const { t } = useLanguage();
+
+  const handleNicknameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nickname.trim().length > 0) {
+      setStep('credentials');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +45,9 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
       setLoading(false);
       return;
     }
+
+    // Store nickname in localStorage for later use
+    localStorage.setItem('pendingNickname', nickname);
 
     const { error } = await signUp(email, password);
     
@@ -74,6 +86,58 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
     );
   }
 
+  if (step === 'nickname') {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {t('auth.welcome')}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {t('auth.chooseNickname')}
+            </p>
+          </div>
+
+          <form onSubmit={handleNicknameSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('auth.nickname')}
+              </label>
+              <input
+                type="text"
+                id="nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder={t('auth.nicknamePlaceholder')}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!nickname.trim()}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('auth.continue')}
+            </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={onSwitchToSignIn}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium"
+              >
+                {t('auth.alreadyHaveAccount')}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8">
@@ -84,6 +148,9 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
           <p className="text-gray-600 dark:text-gray-400">
             {t('auth.signUpToGetStarted')}
           </p>
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {t('auth.welcome')} <span className="font-semibold text-blue-600 dark:text-blue-400">{nickname}</span>!
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

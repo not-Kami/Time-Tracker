@@ -13,6 +13,7 @@ interface ProjectCardProps {
   onResumeTimer: () => void;
   onStopTimer: () => void;
   onTogglePin: (projectId: string) => void;
+  onToggleArchive?: (projectId: string) => void;
   onClick: () => void;
   showCategory?: boolean;
 }
@@ -26,6 +27,7 @@ export function ProjectCard({
   onResumeTimer,
   onStopTimer,
   onTogglePin,
+  onToggleArchive,
   onClick,
   showCategory = false,
 }: ProjectCardProps) {
@@ -57,6 +59,11 @@ export function ProjectCard({
     onTogglePin(project.id);
   };
 
+  const handleToggleArchive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleArchive?.(project.id);
+  };
+
   return (
     <div
       onClick={onClick}
@@ -78,6 +85,23 @@ export function ProjectCard({
 
       {/* Timer Controls - Top right */}
       <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
+        {/* Archive Button */}
+        {onToggleArchive && (
+          <button
+            onClick={handleToggleArchive}
+            className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-110 ${
+              project.isArchived
+                ? 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            title={project.isArchived ? t('projects.unarchive') : t('projects.archive')}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0h14" />
+            </svg>
+          </button>
+        )}
+
         {timerState.status !== 'idle' && (
           <button
             onClick={handleStopTimer}

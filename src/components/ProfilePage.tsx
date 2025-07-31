@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowLeft, User, Calendar, Trophy, Star, Download, Volume2, VolumeX, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, User, Calendar, Trophy, Star, Download, Volume2, VolumeX, Eye, EyeOff, Mail } from 'lucide-react';
 import { Project } from '../types';
-import { getAchievementLevel, formatHours } from '../utils/helpers';
+import { getAchievementLevel, formatHours, getUserNickname, getUserFullName, getUserEmail, getUserInitials, getUserAvatarColor } from '../utils/helpers';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfilePageProps {
   projects: Project[];
@@ -12,9 +13,12 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onToggleSound }: ProfilePageProps) {
-  const [name, setName] = useState('Alex Johnson');
-  const [nickname, setNickname] = useState('Alex');
-  const [dateOfBirth, setDateOfBirth] = useState('1990-05-15');
+  const { user } = useAuth();
+  
+  // Initialize with user data or smart defaults
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,6 +26,15 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+
+  // Update form fields when user data changes
+  useEffect(() => {
+    if (user) {
+      setName(getUserFullName(user) || '');
+      setNickname(getUserNickname(user) || '');
+      // Note: dateOfBirth is not available in user metadata, so we keep it empty
+    }
+  }, [user]);
 
   // Calculate user stats
   const totalTime = projects.reduce((sum, project) => sum + project.totalTime, 0);
@@ -71,6 +84,15 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
+        
+        {/* User Avatar */}
+        <div 
+          className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl"
+          style={{ backgroundColor: getUserAvatarColor(user) }}
+        >
+          {getUserInitials(user)}
+        </div>
+        
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage your account and view achievements</p>
@@ -89,6 +111,20 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
 
             <div className="space-y-4">
               <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Mail className="w-4 h-4 inline mr-1" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={getUserEmail(user)}
+                  readOnly
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Full Name
                 </label>
@@ -97,6 +133,7 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
@@ -110,6 +147,7 @@ export function ProfilePage({ projects, onBack, onExport, isSoundEnabled, onTogg
                   id="nickname"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Enter your nickname"
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -17,6 +18,9 @@ import { TimerToast } from './components/TimerToast';
 import { CategoryNotesModal } from './components/CategoryNotesModal';
 import { GamificationPanel } from './components/GamificationPanel';
 import { UpcomingTasks } from './components/UpcomingTasks';
+import { OnboardingForm, OnboardingData } from './components/Auth/OnboardingForm';
+import { OnboardingGuide } from './components/OnboardingGuide';
+import { AdminPanel } from './components/Admin/AdminPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTimer } from './hooks/useTimer';
 import { usePomodoro } from './hooks/usePomodoro';
@@ -27,8 +31,8 @@ import { generateId, getAchievementLevel, formatHours } from './utils/helpers';
 
 type View = 'dashboard' | 'project' | 'category' | 'profile';
 
-function AppContent() {
-  const { data, saveData, exportData, isLoaded } = useLocalStorage();
+function AppContent({ showGuide = false }: { showGuide?: boolean }) {
+  const { data, saveData, exportData, resetData, isLoaded } = useLocalStorage();
   const { timerState, startTimer, pauseTimer, resumeTimer, stopTimer } = useTimer();
   const { playSound, isSoundEnabled, toggleSound } = useSoundNotifications();
   const { t } = useLanguage();
@@ -43,10 +47,28 @@ function AppContent() {
   const [selectedCategoryForNotes, setSelectedCategoryForNotes] = useState<Category | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showingPinned, setShowingPinned] = useState(false);
+  const [showingArchived, setShowingArchived] = useState(false);
   const [previousAchievementLevel, setPreviousAchievementLevel] = useState<string>('');
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  const handleShowAdmin = useCallback(() => {
+    console.log('handleShowAdmin called, setting showAdminPanel to true');
+    setShowAdminPanel(true);
+    // Force a re-render by updating a different state
+    setCurrentView(currentView);
+  }, [currentView]);
+
+  // Debug: Log when showAdminPanel changes
+  useEffect(() => {
+    console.log('showAdminPanel changed to:', showAdminPanel);
+  }, [showAdminPanel]);
 
   const activeProject = activeTimerProjectId ? data.projects.find(p => p.id === activeTimerProjectId) : null;
-  const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro } = usePomodoro(activeProject);
+  const { pomodoroMode, isBreak, pomodoroTimeLeft, togglePomodoro, forceResume } = usePomodoro(activeProject, {
+    onPause: pauseTimer,
+    onResume: resumeTimer,
+    onForceResume: resumeTimer,
+  });
 
   // Check for achievement level changes
   useEffect(() => {
@@ -78,13 +100,26 @@ function AppContent() {
   }, [pomodoroMode, pomodoroTimeLeft, isBreak, playSound, isSoundEnabled]);
 
   const getFilteredProjects = (): Project[] => {
+    let filteredProjects = data.projects;
+    
+    // Filter by archive status
+    if (showingArchived) {
+      filteredProjects = filteredProjects.filter(project => project.isArchived);
+    } else {
+      filteredProjects = filteredProjects.filter(project => !project.isArchived);
+    }
+    
+    // Filter by pin status
     if (showingPinned) {
-      return data.projects.filter(project => project.isPinned);
+      filteredProjects = filteredProjects.filter(project => project.isPinned);
     }
+    
+    // Filter by category
     if (selectedCategoryId) {
-      return data.projects.filter(project => project.categoryId === selectedCategoryId);
+      filteredProjects = filteredProjects.filter(project => project.categoryId === selectedCategoryId);
     }
-    return data.projects;
+    
+    return filteredProjects;
   };
 
   const getProjectsByCategory = (categoryId: string): Project[] => {
@@ -117,6 +152,7 @@ function AppContent() {
       sessions: [],
       notes: [],
       isPinned: false,
+      isArchived: false,
       pomodoroSettings: {
         enabled: pomodoroEnabled || false,
         focusTime: focusTime || 25,
@@ -173,6 +209,19 @@ function AppContent() {
     const updatedProject = {
       ...project,
       isPinned: !project.isPinned,
+      updatedAt: new Date(),
+    };
+
+    handleUpdateProject(updatedProject);
+  };
+
+  const handleToggleArchive = (projectId: string) => {
+    const project = findProjectById(projectId);
+    if (!project) return;
+
+    const updatedProject = {
+      ...project,
+      isArchived: !project.isArchived,
       updatedAt: new Date(),
     };
 
@@ -244,6 +293,14 @@ function AppContent() {
 
   const handleShowPinned = () => {
     setShowingPinned(true);
+    setShowingArchived(false);
+    setSelectedCategoryId(null);
+    setCurrentView('category');
+  };
+
+  const handleShowArchived = () => {
+    setShowingArchived(true);
+    setShowingPinned(false);
     setSelectedCategoryId(null);
     setCurrentView('category');
   };
@@ -312,12 +369,15 @@ function AppContent() {
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
+            onShowArchived={handleShowArchived}
             onShowDashboard={handleShowDashboard}
             onShowProfile={handleShowProfile}
             showingPinned={showingPinned}
+            showingArchived={showingArchived}
             currentView={currentView}
             onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
             onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onShowAdmin={handleShowAdmin}
           />
         }
       >
@@ -349,6 +409,7 @@ function AppContent() {
             pomodoroTimeLeft={pomodoroTimeLeft}
             isBreak={isBreak}
             onTogglePomodoro={togglePomodoro}
+            onForceResume={forceResume}
           />
         )}
       </Layout>
@@ -365,12 +426,15 @@ function AppContent() {
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
+            onShowArchived={handleShowArchived}
             onShowDashboard={handleShowDashboard}
             onShowProfile={handleShowProfile}
             showingPinned={showingPinned}
+            showingArchived={showingArchived}
             currentView={currentView}
             onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
             onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onShowAdmin={handleShowAdmin}
           />
         }
       >
@@ -417,12 +481,15 @@ function AppContent() {
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
             onShowPinned={handleShowPinned}
+            onShowArchived={handleShowArchived}
             onShowDashboard={handleShowDashboard}
             onShowProfile={handleShowProfile}
             showingPinned={showingPinned}
+            showingArchived={showingArchived}
             currentView={currentView}
             onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
             onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onShowAdmin={handleShowAdmin}
           />
         }
       >
@@ -531,6 +598,7 @@ function AppContent() {
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
           onExport={exportData}
+          onResetData={resetData}
           isSoundEnabled={isSoundEnabled}
           onToggleSound={toggleSound}
           projects={data.projects}
@@ -575,22 +643,55 @@ function AppContent() {
       ? findCategoryById(selectedCategoryId)?.name || t('projects.new')
       : t('projects.new');
 
+  // Show guide after onboarding
+  if (showGuide) {
+    return (
+      <OnboardingGuide
+        onComplete={() => {
+          localStorage.removeItem('showGuide');
+          window.location.reload();
+        }}
+        onCreateCategory={handleCreateCategory}
+        onAddSkill={(categoryId, skillName) => {
+          // TODO: Implement skill creation
+          console.log('Adding skill:', skillName, 'to category:', categoryId);
+        }}
+        selectedSkills={[]} // TODO: Get from userProfile
+      />
+    );
+  }
+
+  // Show admin panel if requested
+  console.log('AppContent render - showAdminPanel:', showAdminPanel);
+  if (showAdminPanel) {
+    console.log('Rendering AdminPanel, showAdminPanel:', showAdminPanel);
+    return <AdminPanel onBack={() => setShowAdminPanel(false)} />;
+  }
+
   return (
     <Layout
       sidebar={
-        <Sidebar
-          categories={data.categories}
-          projects={data.projects}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={handleSelectCategory}
-          onShowPinned={handleShowPinned}
-          onShowDashboard={handleShowDashboard}
-          onShowProfile={handleShowProfile}
-          showingPinned={showingPinned}
-          currentView={currentView}
-          onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
-        />
+        (() => {
+                  console.log('Rendering Sidebar with handleShowAdmin:', typeof handleShowAdmin);
+        return (
+          <Sidebar
+            categories={data.categories}
+            projects={data.projects}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={handleSelectCategory}
+            onShowPinned={handleShowPinned}
+            onShowArchived={handleShowArchived}
+            onShowDashboard={handleShowDashboard}
+            onShowProfile={handleShowProfile}
+            showingPinned={showingPinned}
+            showingArchived={showingArchived}
+            currentView={currentView}
+            onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
+            onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onShowAdmin={handleShowAdmin}
+          />
+        );
+        })()
       }
     >
       <div className="space-y-8">
@@ -675,6 +776,7 @@ function AppContent() {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         onExport={exportData}
+        onResetData={resetData}
         isSoundEnabled={isSoundEnabled}
         onToggleSound={toggleSound}
         projects={data.projects}
@@ -712,7 +814,31 @@ function AppContent() {
 }
 
 function AuthenticatedApp() {
-  const { user, loading } = useAuth();
+  const { user, userProfile, loading, completeOnboarding } = useAuth();
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+
+  const handleOnboardingComplete = async (onboardingData: OnboardingData) => {
+    setOnboardingLoading(true);
+    
+    try {
+      await completeOnboarding({
+        nickname: onboardingData.nickname,
+        preferredLanguage: onboardingData.preferredLanguage,
+        selectedSkills: onboardingData.selectedSkills || [],
+        timezone: onboardingData.timezone,
+        dailyGoal: onboardingData.dailyGoal,
+      });
+      
+      // Update user's preferred language
+      if (onboardingData.preferredLanguage) {
+        localStorage.setItem('language', onboardingData.preferredLanguage);
+      }
+    } catch (error) {
+      console.error('Error saving onboarding data:', error);
+    } finally {
+      setOnboardingLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -726,19 +852,51 @@ function AuthenticatedApp() {
     return <AuthPage />;
   }
 
-  return <AppContent />;
+    // Show onboarding for new users
+  const isNewUser = localStorage.getItem('newUser') === 'true';
+  const showGuide = localStorage.getItem('showGuide') === 'true';
+  
+  if (user && (isNewUser || (userProfile && !userProfile.hasCompletedOnboarding))) {
+    return (
+      <OnboardingForm
+        onComplete={handleOnboardingComplete}
+        loading={onboardingLoading}
+      />
+    );
+  }
+
+  return <AppContent showGuide={showGuide} />;
 }
 
 function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <AuthenticatedApp />
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <Router>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/admin" element={<AdminRoute />} />
+              <Route path="*" element={<AuthenticatedApp />} />
+            </Routes>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </Router>
   );
+}
+
+function AdminRoute() {
+  const { user, userProfile } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  if (userProfile?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <AdminPanel onBack={() => window.history.back()} />;
 }
 
 export default App;

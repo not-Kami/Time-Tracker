@@ -1,205 +1,183 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TimeTrackerData } from '../types';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'timeXP-data';
+const LAST_SYNC_KEY = 'timeXP-last-sync';
+const SYNC_QUEUE_KEY = 'timeXP-sync-queue';
 
 const defaultData: TimeTrackerData = {
-  categories: [
-    {
-      id: '1',
-      name: 'Development',
-      color: 'blue',
-      icon: 'Code2',
-      createdAt: new Date(),
-    },
-    {
-      id: '2',
-      name: 'Design',
-      color: 'purple',
-      icon: 'Palette',
-      createdAt: new Date(),
-    },
-    {
-      id: '3',
-      name: 'Personal',
-      color: 'green',
-      icon: 'User',
-      createdAt: new Date(),
-    },
-    {
-      id: '4',
-      name: 'Learning',
-      color: 'orange',
-      icon: 'Lightbulb',
-      createdAt: new Date(),
-    },
-  ],
-  projects: [
-    {
-      id: 'sample-1',
-      name: 'React Dashboard',
-      categoryId: '1',
-      description: 'Building a comprehensive admin dashboard with React and TypeScript',
-      totalTime: 5 * 60 * 60 * 1000, // 5 hours
-      isPinned: true,
-      pomodoroSettings: { enabled: false, focusTime: 25, breakTime: 5 },
-      tasks: [
-        { id: 'task-1', name: 'Setup project structure', completed: true, createdAt: new Date() },
-        { id: 'task-2', name: 'Create authentication system', completed: true, createdAt: new Date() },
-        { id: 'task-3', name: 'Build user management', completed: false, createdAt: new Date() },
-      ],
-      sessions: [
-        { id: 'session-1', startTime: new Date(Date.now() - 86400000), duration: 2 * 60 * 60 * 1000, createdAt: new Date() },
-        { id: 'session-2', startTime: new Date(Date.now() - 43200000), duration: 3 * 60 * 60 * 1000, createdAt: new Date() },
-      ],
-      notes: [
-        { id: 'note-1', content: 'Remember to implement proper error handling for API calls', createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
-        { id: 'note-2', content: 'Consider using React Query for better data fetching and caching', createdAt: new Date(Date.now() - 43200000), updatedAt: new Date(Date.now() - 43200000) },
-      ],
-      createdAt: new Date(Date.now() - 172800000),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'sample-2',
-      name: 'Brand Identity Design',
-      categoryId: '2',
-      description: 'Complete brand identity package for a tech startup',
-      totalTime: 25 * 60 * 60 * 1000, // 25 hours
-      isPinned: false,
-      pomodoroSettings: { enabled: true, focusTime: 45, breakTime: 10 },
-      tasks: [
-        { id: 'task-4', name: 'Logo concepts', completed: true, createdAt: new Date() },
-        { id: 'task-5', name: 'Color palette', completed: true, createdAt: new Date() },
-        { id: 'task-6', name: 'Typography selection', completed: true, createdAt: new Date() },
-        { id: 'task-7', name: 'Brand guidelines', completed: false, createdAt: new Date() },
-      ],
-      sessions: [
-        { id: 'session-3', startTime: new Date(Date.now() - 259200000), duration: 8 * 60 * 60 * 1000, createdAt: new Date() },
-        { id: 'session-4', startTime: new Date(Date.now() - 172800000), duration: 12 * 60 * 60 * 1000, createdAt: new Date() },
-        { id: 'session-5', startTime: new Date(Date.now() - 86400000), duration: 5 * 60 * 60 * 1000, createdAt: new Date() },
-      ],
-      notes: [
-        { id: 'note-3', content: 'Client prefers minimalist approach with bold typography', createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 172800000) },
-      ],
-      createdAt: new Date(Date.now() - 345600000),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'sample-3',
-      name: 'Guitar Practice',
-      categoryId: '3',
-      description: 'Daily guitar practice sessions focusing on fingerpicking techniques',
-      totalTime: 75 * 60 * 60 * 1000, // 75 hours
-      isPinned: true,
-      pomodoroSettings: { enabled: true, focusTime: 30, breakTime: 5 },
-      tasks: [
-        { id: 'task-8', name: 'Learn basic chords', completed: true, createdAt: new Date() },
-        { id: 'task-9', name: 'Practice fingerpicking patterns', completed: true, createdAt: new Date() },
-        { id: 'task-10', name: 'Learn 5 songs', completed: false, createdAt: new Date() },
-        { id: 'task-11', name: 'Record first performance', completed: false, createdAt: new Date() },
-      ],
-      sessions: Array.from({ length: 15 }, (_, i) => ({
-        id: `guitar-session-${i}`,
-        startTime: new Date(Date.now() - (i + 1) * 86400000),
-        duration: 5 * 60 * 60 * 1000,
-        createdAt: new Date(),
-      })),
-      notes: [
-        { id: 'note-4', content: 'Focus on clean chord transitions - still struggling with F to C', createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
-        { id: 'note-5', content: 'Discovered a great fingerpicking pattern for "Dust in the Wind"', createdAt: new Date(Date.now() - 43200000), updatedAt: new Date(Date.now() - 43200000) },
-      ],
-      createdAt: new Date(Date.now() - 1296000000),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'sample-4',
-      name: 'Machine Learning Course',
-      categoryId: '4',
-      description: 'Complete online course on machine learning fundamentals',
-      totalTime: 150 * 60 * 60 * 1000, // 150 hours
-      isPinned: false,
-      pomodoroSettings: { enabled: true, focusTime: 50, breakTime: 15 },
-      tasks: [
-        { id: 'task-12', name: 'Linear regression', completed: true, createdAt: new Date() },
-        { id: 'task-13', name: 'Neural networks', completed: true, createdAt: new Date() },
-        { id: 'task-14', name: 'Deep learning', completed: true, createdAt: new Date() },
-        { id: 'task-15', name: 'Final project', completed: false, createdAt: new Date() },
-      ],
-      sessions: Array.from({ length: 30 }, (_, i) => ({
-        id: `ml-session-${i}`,
-        startTime: new Date(Date.now() - (i + 1) * 86400000),
-        duration: 5 * 60 * 60 * 1000,
-        createdAt: new Date(),
-      })),
-      notes: [
-        { id: 'note-6', content: 'Key insight: Feature engineering is often more important than algorithm choice', createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 172800000) },
-        { id: 'note-7', content: 'Final project idea: Predict stock prices using sentiment analysis of news articles', createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
-      ],
-      createdAt: new Date(Date.now() - 2592000000),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'sample-5',
-      name: 'Carpentry Workshop',
-      categoryId: '3',
-      description: 'Learning traditional woodworking techniques and building furniture',
-      totalTime: 1200 * 60 * 60 * 1000, // 1200 hours
-      isPinned: false,
-      pomodoroSettings: { enabled: false, focusTime: 25, breakTime: 5 },
-      tasks: [
-        { id: 'task-16', name: 'Basic joinery techniques', completed: true, createdAt: new Date() },
-        { id: 'task-17', name: 'Build first table', completed: true, createdAt: new Date() },
-        { id: 'task-18', name: 'Advanced carving', completed: true, createdAt: new Date() },
-        { id: 'task-19', name: 'Master bedroom set', completed: false, createdAt: new Date() },
-      ],
-      sessions: Array.from({ length: 100 }, (_, i) => ({
-        id: `carpentry-session-${i}`,
-        startTime: new Date(Date.now() - (i + 1) * 86400000),
-        duration: 12 * 60 * 60 * 1000,
-        createdAt: new Date(),
-      })),
-      notes: [
-        { id: 'note-8', content: 'Always measure twice, cut once - learned this the hard way!', createdAt: new Date(Date.now() - 259200000), updatedAt: new Date(Date.now() - 259200000) },
-        { id: 'note-9', content: 'Oak is beautiful but challenging to work with - requires sharp tools', createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 172800000) },
-      ],
-      createdAt: new Date(Date.now() - 31536000000),
-      updatedAt: new Date(),
-    },
-    {
-      id: 'sample-6',
-      name: 'Photography Journey',
-      categoryId: '2',
-      description: 'Developing photography skills from beginner to professional level',
-      totalTime: 12000 * 60 * 60 * 1000, // 12000 hours
-      isPinned: true,
-      pomodoroSettings: { enabled: false, focusTime: 25, breakTime: 5 },
-      tasks: [
-        { id: 'task-20', name: 'Camera basics', completed: true, createdAt: new Date() },
-        { id: 'task-21', name: 'Portrait photography', completed: true, createdAt: new Date() },
-        { id: 'task-22', name: 'Wedding photography', completed: true, createdAt: new Date() },
-        { id: 'task-23', name: 'Start photography business', completed: true, createdAt: new Date() },
-      ],
-      sessions: Array.from({ length: 200 }, (_, i) => ({
-        id: `photo-session-${i}`,
-        startTime: new Date(Date.now() - (i + 1) * 86400000),
-        duration: 60 * 60 * 60 * 1000,
-        createdAt: new Date(),
-      })),
-      notes: [
-        { id: 'note-10', content: 'Golden hour is overrated - blue hour creates more dramatic portraits', createdAt: new Date(Date.now() - 345600000), updatedAt: new Date(Date.now() - 345600000) },
-        { id: 'note-11', content: 'Invested in 85mm f/1.4 lens - game changer for portrait work', createdAt: new Date(Date.now() - 259200000), updatedAt: new Date(Date.now() - 259200000) },
-        { id: 'note-12', content: 'First paid wedding shoot next month - nervous but excited!', createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
-      ],
-      createdAt: new Date(Date.now() - 157680000000),
-      updatedAt: new Date(),
-    },
-  ],
+  categories: [],
+  projects: [],
   version: '1.0.0',
 };
+
+// Types pour les événements de synchronisation
+type SyncTrigger = 'online' | 'pomodoro' | 'manual' | 'session' | 'project' | 'category' | 'periodic';
+
+interface SyncEvent {
+  id: string;
+  trigger: SyncTrigger;
+  timestamp: number;
+  priority: number; // 1 = haute, 2 = moyenne, 3 = basse
+}
 
 export function useLocalStorage() {
   const [data, setData] = useState<TimeTrackerData>(defaultData);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncQueue, setSyncQueue] = useState<SyncEvent[]>([]);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const periodicSyncRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Charger la file d'attente de synchronisation
+  useEffect(() => {
+    const storedQueue = localStorage.getItem(SYNC_QUEUE_KEY);
+    if (storedQueue) {
+      try {
+        setSyncQueue(JSON.parse(storedQueue));
+      } catch (error) {
+        console.error('Error loading sync queue:', error);
+        setSyncQueue([]);
+      }
+    }
+  }, []);
+
+  // Sauvegarder la file d'attente
+  const saveSyncQueue = (queue: SyncEvent[]) => {
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+    setSyncQueue(queue);
+  };
+
+  // Ajouter un événement de synchronisation
+  const addSyncEvent = (trigger: SyncTrigger, priority: number = 2) => {
+    if (!autoSyncEnabled) return;
+
+    const newEvent: SyncEvent = {
+      id: `${trigger}-${Date.now()}-${Math.random()}`,
+      trigger,
+      timestamp: Date.now(),
+      priority,
+    };
+
+    const updatedQueue = [...syncQueue, newEvent];
+    saveSyncQueue(updatedQueue);
+
+    // Déclencher la synchronisation après un délai
+    scheduleSync();
+  };
+
+  // Programmer la synchronisation
+  const scheduleSync = () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    // Délais différents selon la priorité
+    const delays = {
+      1: 1000,    // Haute priorité : 1 seconde
+      2: 5000,    // Moyenne priorité : 5 secondes
+      3: 30000,   // Basse priorité : 30 secondes
+    };
+
+    syncTimeoutRef.current = setTimeout(() => {
+      if (isOnline && !isSyncing) {
+        processSyncQueue();
+      }
+    }, delays[2]); // Utilise la priorité moyenne par défaut
+  };
+
+  // Traiter la file d'attente de synchronisation
+  const processSyncQueue = async () => {
+    if (syncQueue.length === 0 || isSyncing || !isOnline) return;
+
+    setIsSyncing(true);
+    
+    try {
+      // Trier par priorité et timestamp
+      const sortedQueue = [...syncQueue].sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        return a.timestamp - b.timestamp;
+      });
+
+      // Prendre les 5 premiers événements
+      const eventsToProcess = sortedQueue.slice(0, 5);
+      
+      // Synchroniser
+      const result = await saveToSupabase(data);
+      
+      if (result.success) {
+        // Supprimer les événements traités
+        const remainingEvents = syncQueue.filter(
+          event => !eventsToProcess.find(e => e.id === event.id)
+        );
+        saveSyncQueue(remainingEvents);
+        
+        // Mettre à jour le timestamp de dernière synchronisation
+        const now = new Date();
+        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+        setLastSync(now);
+      }
+    } catch (error) {
+      console.error('Error processing sync queue:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Synchronisation immédiate lors du retour en ligne
+      addSyncEvent('online', 1);
+    };
+    
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Synchronisation périodique (toutes les 5 minutes)
+  useEffect(() => {
+    if (autoSyncEnabled && isOnline) {
+      periodicSyncRef.current = setInterval(() => {
+        addSyncEvent('periodic', 3);
+      }, 5 * 60 * 1000); // 5 minutes
+    }
+
+    return () => {
+      if (periodicSyncRef.current) {
+        clearInterval(periodicSyncRef.current);
+      }
+    };
+  }, [autoSyncEnabled, isOnline]);
+
+  // Traiter la file d'attente quand on revient en ligne
+  useEffect(() => {
+    if (isOnline && syncQueue.length > 0 && !isSyncing) {
+      processSyncQueue();
+    }
+  }, [isOnline, syncQueue.length, isSyncing]);
+
+  // Load last sync time
+  useEffect(() => {
+    const storedLastSync = localStorage.getItem(LAST_SYNC_KEY);
+    if (storedLastSync) {
+      setLastSync(new Date(storedLastSync));
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -207,33 +185,33 @@ export function useLocalStorage() {
       if (stored) {
         const parsedData = JSON.parse(stored);
         // Convert date strings back to Date objects
-        parsedData.categories = parsedData.categories?.map((cat: any) => ({
+        parsedData.categories = Array.isArray(parsedData.categories) ? parsedData.categories.map((cat: Record<string, unknown>) => ({
           ...cat,
-          createdAt: new Date(cat.createdAt),
-        })) || defaultData.categories;
+          createdAt: new Date(cat.createdAt as string),
+        })) : defaultData.categories;
         
-        parsedData.projects = parsedData.projects?.map((proj: any) => ({
+        parsedData.projects = Array.isArray(parsedData.projects) ? parsedData.projects.map((proj: Record<string, unknown>) => ({
           ...proj,
-          createdAt: new Date(proj.createdAt),
-          updatedAt: new Date(proj.updatedAt),
-          isPinned: proj.isPinned || false,
-          pomodoroSettings: proj.pomodoroSettings || { enabled: false, focusTime: 25, breakTime: 5 },
-          tasks: proj.tasks?.map((task: any) => ({
+          createdAt: new Date(proj.createdAt as string),
+          updatedAt: new Date(proj.updatedAt as string),
+          isPinned: proj.isPinned as boolean || false,
+          pomodoroSettings: proj.pomodoroSettings as Record<string, unknown> || { enabled: false, focusTime: 25, breakTime: 5 },
+          tasks: Array.isArray(proj.tasks) ? proj.tasks.map((task: Record<string, unknown>) => ({
             ...task,
-            createdAt: new Date(task.createdAt),
-          })) || [],
-          sessions: proj.sessions?.map((session: any) => ({
+            createdAt: new Date(task.createdAt as string),
+          })) : [],
+          sessions: Array.isArray(proj.sessions) ? proj.sessions.map((session: Record<string, unknown>) => ({
             ...session,
-            startTime: new Date(session.startTime),
-            endTime: session.endTime ? new Date(session.endTime) : undefined,
-            createdAt: new Date(session.createdAt),
-          })) || [],
-          notes: proj.notes?.map((note: any) => ({
+            startTime: new Date(session.startTime as string),
+            endTime: session.endTime ? new Date(session.endTime as string) : undefined,
+            createdAt: new Date(session.createdAt as string),
+          })) : [],
+          notes: Array.isArray(proj.notes) ? proj.notes.map((note: Record<string, unknown>) => ({
             ...note,
-            createdAt: new Date(note.createdAt),
-            updatedAt: new Date(note.updatedAt),
-          })) || [],
-        })) || [];
+            createdAt: new Date(note.createdAt as string),
+            updatedAt: new Date(note.updatedAt as string),
+          })) : [],
+        })) : [];
         
         setData(parsedData);
       } else {
@@ -268,10 +246,210 @@ export function useLocalStorage() {
     URL.revokeObjectURL(url);
   };
 
+  const resetData = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LAST_SYNC_KEY);
+    setData(defaultData);
+    setLastSync(null);
+  };
+
+  // Save data to Supabase
+  const saveToSupabase = async (userData: TimeTrackerData) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user logged in, skipping Supabase sync');
+        return { success: false, error: 'No user logged in' };
+      }
+
+      const { error } = await supabase
+        .from('user_data')
+        .upsert({
+          user_id: user.id,
+          data: userData,
+          last_updated: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        return { success: false, error };
+      }
+
+      // Update last sync time
+      const now = new Date();
+      localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+      setLastSync(now);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+      return { success: false, error };
+    }
+  };
+
+  // Load data from Supabase
+  const loadFromSupabase = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user logged in, skipping Supabase load');
+        return { success: false, error: 'No user logged in' };
+      }
+
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('data, last_updated')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading from Supabase:', error);
+        return { success: false, error };
+      }
+
+      if (data) {
+        const userData = data.data as TimeTrackerData;
+        
+        // Convert date strings back to Date objects for categories
+        if (Array.isArray(userData.categories)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          userData.categories = userData.categories.map((cat) => ({
+            ...cat,
+            createdAt: new Date((cat as any).createdAt),
+          })) as any;
+        }
+        
+        // Convert date strings back to Date objects for projects
+        if (Array.isArray(userData.projects)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          userData.projects = userData.projects.map((proj) => ({
+            ...proj,
+            createdAt: new Date((proj as any).createdAt),
+            updatedAt: new Date((proj as any).updatedAt),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            tasks: Array.isArray((proj as any).tasks) ? (proj as any).tasks.map((task: any) => ({
+              ...task,
+              createdAt: new Date(task.createdAt),
+            })) : [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            sessions: Array.isArray((proj as any).sessions) ? (proj as any).sessions.map((session: any) => ({
+              ...session,
+              startTime: new Date(session.startTime),
+              endTime: session.endTime ? new Date(session.endTime) : undefined,
+              createdAt: new Date(session.createdAt),
+            })) : [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            notes: Array.isArray((proj as any).notes) ? (proj as any).notes.map((note: any) => ({
+              ...note,
+              createdAt: new Date(note.createdAt),
+              updatedAt: new Date(note.updatedAt),
+            })) : [],
+          })) as any;
+        }
+
+        setData(userData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        
+        const lastUpdated = new Date(data.last_updated);
+        localStorage.setItem(LAST_SYNC_KEY, lastUpdated.toISOString());
+        setLastSync(lastUpdated);
+
+        return { success: true, data: userData };
+      }
+
+      return { success: false, error: 'No data found' };
+    } catch (error) {
+      console.error('Error loading from Supabase:', error);
+      return { success: false, error };
+    }
+  };
+
+  // Manual sync function
+  const syncData = async (direction: 'upload' | 'download' | 'both' = 'both') => {
+    setIsSyncing(true);
+    
+    try {
+      if (direction === 'upload' || direction === 'both') {
+        const result = await saveToSupabase(data);
+        if (!result.success) {
+          console.error('Upload failed:', result.error);
+        }
+      }
+
+      if (direction === 'download' || direction === 'both') {
+        const result = await loadFromSupabase();
+        if (!result.success) {
+          console.error('Download failed:', result.error);
+        }
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Fonctions de déclenchement de synchronisation
+  const triggerSync = {
+    // Synchronisation manuelle (haute priorité)
+    manual: () => addSyncEvent('manual', 1),
+    
+    // Synchronisation après session Pomodoro (haute priorité)
+    pomodoro: () => addSyncEvent('pomodoro', 1),
+    
+    // Synchronisation après session de travail (moyenne priorité)
+    session: () => addSyncEvent('session', 2),
+    
+    // Synchronisation après modification de projet (moyenne priorité)
+    project: () => addSyncEvent('project', 2),
+    
+    // Synchronisation après modification de catégorie (basse priorité)
+    category: () => addSyncEvent('category', 3),
+    
+    // Synchronisation périodique (basse priorité)
+    periodic: () => addSyncEvent('periodic', 3),
+  };
+
+  // Fonction pour activer/désactiver la synchronisation automatique
+  const toggleAutoSync = () => {
+    setAutoSyncEnabled(!autoSyncEnabled);
+  };
+
+  // Fonction pour vider la file d'attente
+  const clearSyncQueue = () => {
+    saveSyncQueue([]);
+  };
+
+  // Fonction pour obtenir les statistiques de synchronisation
+  const getSyncStats = () => {
+    const stats = {
+      queueLength: syncQueue.length,
+      lastSync: lastSync,
+      isOnline,
+      isSyncing,
+      autoSyncEnabled,
+      pendingEvents: syncQueue.map(event => ({
+        trigger: event.trigger,
+        priority: event.priority,
+        age: Date.now() - event.timestamp,
+      })),
+    };
+    return stats;
+  };
+
   return {
     data,
     saveData,
     exportData,
+    resetData,
+    syncData,
+    triggerSync,
+    toggleAutoSync,
+    clearSyncQueue,
+    getSyncStats,
     isLoaded,
+    isOnline,
+    lastSync,
+    isSyncing,
+    syncQueue,
+    autoSyncEnabled,
   };
 }

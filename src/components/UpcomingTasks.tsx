@@ -2,14 +2,16 @@ import React from 'react';
 import { Calendar, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Project, Task } from '../types';
 import { getCategoryColor } from '../utils/helpers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface UpcomingTasksProps {
   projects: Project[];
-  categories: any[];
+  categories: Array<{ id: string; name: string; color: string }>;
   onTaskClick?: (project: Project, task: Task) => void;
 }
 
 export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTasksProps) {
+  const { t } = useLanguage();
   // Get all incomplete tasks with deadlines
   const upcomingTasks = projects
     .flatMap(project => 
@@ -38,10 +40,10 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
     const now = new Date();
     const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return 'Due tomorrow';
-    if (diffDays <= 7) return `Due in ${diffDays} days`;
+    if (diffDays < 0) return t('tasks.overdue').replace('{days}', Math.abs(diffDays).toString());
+    if (diffDays === 0) return t('tasks.dueToday');
+    if (diffDays === 1) return t('tasks.dueTomorrow');
+    if (diffDays <= 7) return t('tasks.dueInDays').replace('{days}', diffDays.toString());
     return deadline.toLocaleDateString();
   };
 
@@ -59,12 +61,12 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center space-x-3 mb-4">
           <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Upcoming Tasks</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('upcomingTasks.title')}</h3>
         </div>
         <div className="text-center py-8">
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">No upcoming deadlines</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add deadlines to your tasks to see them here</p>
+          <p className="text-gray-500 dark:text-gray-400">{t('upcomingTasks.noDeadlines')}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{t('upcomingTasks.addDeadlines')}</p>
         </div>
       </div>
     );
@@ -74,7 +76,7 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center space-x-3 mb-6">
         <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Upcoming Tasks</h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('upcomingTasks.title')}</h3>
       </div>
 
       <div className="space-y-3">
@@ -116,7 +118,7 @@ export function UpcomingTasks({ projects, categories, onTaskClick }: UpcomingTas
 
       {upcomingTasks.length === 5 && (
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Showing next 5 tasks</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('upcomingTasks.showingNext')}</p>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import * as Icons from 'lucide-react';
 import { Category, Project } from '../types';
 import { formatHours, getCategoryColor } from '../utils/helpers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CategoryCardProps {
   category: Category;
@@ -11,6 +12,7 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, projects, onAddProject, onClick }: CategoryCardProps) {
+  const { t } = useLanguage();
   const IconComponent = (Icons as any)[category.icon] || Icons.Folder;
   const totalTime = projects.reduce((sum, project) => sum + project.totalTime, 0);
   const colorClasses = getCategoryColor(category.color);
@@ -49,7 +51,7 @@ export function CategoryCard({ category, projects, onAddProject, onClick }: Cate
 
       <div className="p-6">
         {projects.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">No projects in this category</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">{t('projects.noSkillsInCategory')}</p>
         ) : (
           <div className="space-y-3 mb-6">
             {projects.slice(0, 3).map((project) => (
@@ -62,7 +64,7 @@ export function CategoryCard({ category, projects, onAddProject, onClick }: Cate
             ))}
             {projects.length > 3 && (
               <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-                +{projects.length - 3} more projects
+                +{projects.length - 3} {t('projects.more')}
               </div>
             )}
           </div>
@@ -72,7 +74,7 @@ export function CategoryCard({ category, projects, onAddProject, onClick }: Cate
           onClick={handleAddProject}
           className="w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105"
         >
-          + Add Project
+          + {t('projects.new')}
         </button>
       </div>
     </div>
